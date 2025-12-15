@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civ Music Guesser – Music History Listening Lab</title>
+    <meta name="description" content="Interactive music history listening lab. Guess the genre of each piece, then reveal composer, context, and key characteristics.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; 
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* Gradient Animation */
+        .bg-animated {
+            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #0f172a);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-glow:focus {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+            border-color: #818cf8;
+        }
+        
+        /* Reveal Animation */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .reveal-anim { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col h-screen overflow-hidden bg-animated text-slate-100">
+
+    <!-- Header -->
+    <header class="glass border-b-0 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center z-30 shadow-xl relative backdrop-blur-xl">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <i data-lucide="headphones" class="text-white w-5 h-5"></i>
+            </div>
+            <div class="flex flex-col">
+                <h1 class="font-semibold text-base sm:text-xl text-white tracking-tight">Civ Music Guesser</h1>
+                <p class="text-[10px] sm:text-xs text-slate-400 uppercase tracking-[0.2em]">Music History Listening Lab</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 sm:gap-3">
+            <div class="text-[10px] sm:text-xs font-mono text-indigo-300 bg-indigo-950/50 px-2.5 py-1.5 sm:px-3 rounded-full border border-indigo-500/30 mr-1.5 sm:mr-2">
+                TRACK <span id="current-count" class="text-white font-bold">1</span> / <span id="total-count">0</span>
+            </div>
+            
+            <button onclick="prevQuestion()" class="group bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600/50 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 sm:gap-2" title="Previous Piece">
+                <i data-lucide="chevron-left" class="w-4 h-4 transition-transform group-hover:-translate-x-0.5"></i> Back
+            </button>
+
+            <button onclick="nextQuestion()" class="group bg-indigo-600 hover:bg-indigo-500 text-white px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all shadow-lg shadow-indigo-500/25 flex items-center gap-1.5 sm:gap-2">
+                Next <i data-lucide="chevron-right" class="w-4 h-4 transition-transform group-hover:translate-x-0.5"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <main class="flex-grow flex flex-col h-full overflow-hidden relative">
+        
+        <!-- Content Container -->
+        <div class="flex-1 flex flex-col h-full overflow-y-auto relative scroll-smooth">
+            
+            <!-- Media Player Section -->
+            <div class="w-full bg-black/40 flex flex-col items-center justify-center relative min-h-[260px] sm:min-h-[320px] lg:h-[45%] border-b border-white/5 backdrop-blur-sm transition-all duration-500" id="player-section">
+                
+                <!-- Player Wrapper -->
+                <div id="media-container" class="w-full h-full max-w-5xl mx-auto flex items-center justify-center p-4 relative overflow-hidden">
+                    <div class="text-slate-500 flex flex-col items-center animate-pulse">
+                        <i data-lucide="loader" class="w-10 h-10 mb-3 animate-spin text-indigo-500"></i>
+                        <p class="text-sm font-medium tracking-wide">LOADING AUDIO...</p>
+                    </div>
+                </div>
+
+                <!-- Backup/Direct Link -->
+                <div class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-20">
+                    <a id="backup-btn" href="#" target="_blank" rel="noopener noreferrer" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[10px] sm:text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-slate-600/30 backdrop-blur-md transition-all flex items-center gap-1.5 sm:gap-2 hover:text-white">
+                        <i data-lucide="external-link" class="w-3 h-3"></i> 
+                        Problem playing? Open Source
+                    </a>
+                </div>
+
+            </div>
+
+            <!-- Quiz Section -->
+            <div class="p-5 md:p-8 max-w-4xl mx-auto w-full flex-grow flex flex-col gap-8">
+                
+                <!-- Input Area -->
+                <div class="flex flex-col gap-3">
+                    <label class="text-indigo-400 font-bold uppercase tracking-widest text-xs flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span> Identify the Genre
+                    </label>
+                    <h2 class="text-2xl md:text-4xl font-light text-white tracking-tight">What genre is this piece?</h2>
+                    
+                    <div id="input-area" class="flex flex-col sm:flex-row gap-3 mt-3 sm:mt-4 relative">
+                        <input type="text" id="user-guess" 
+                            class="flex-grow bg-slate-900/60 border border-slate-600/50 rounded-xl px-4 sm:px-6 py-3.5 sm:py-4 text-lg sm:text-xl text-white placeholder-slate-500 outline-none input-glow transition-all backdrop-blur-sm"
+                            placeholder="Type your guess here..." 
+                            autocomplete="off"
+                            onkeypress="handleKeyPress(event)">
+                        <button onclick="checkAnswer()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95">
+                            Check
+                        </button>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-400 mt-1 sm:mt-2">Try broad genres like <span class="text-indigo-300">Gregorian Chant</span>, <span class="text-indigo-300">Fugue</span>, <span class="text-indigo-300">Concerto</span>, <span class="text-indigo-300">Madrigal</span>, etc.</p>
+                </div>
+
+                <!-- Feedback Panel (Hidden by default) -->
+                <div id="feedback-panel" class="hidden flex-col gap-6 reveal-anim pb-20">
+                    
+                    <!-- Result Banner -->
+                    <div id="result-banner" class="p-5 rounded-xl flex items-center gap-4 border shadow-lg backdrop-blur-md">
+                        <!-- Injected via JS -->
+                    </div>
+
+                    <!-- Details Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        <!-- Metadata Card -->
+                        <div class="glass p-6 rounded-2xl border-l-4 border-indigo-500 flex flex-col gap-4 group hover:bg-slate-800/40 transition-colors">
+                            <div class="flex items-center gap-2 text-indigo-400 mb-1">
+                                <i data-lucide="music" class="w-4 h-4"></i>
+                                <span class="text-xs font-bold uppercase tracking-wider">Piece Details</span>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <span class="block text-slate-500 text-xs font-bold uppercase mb-1">Title</span>
+                                    <span id="info-title" class="text-white font-serif text-2xl leading-tight"></span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <span class="block text-slate-500 text-xs font-bold uppercase mb-1">Composer</span>
+                                        <span id="info-composer" class="text-indigo-200 font-medium"></span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-slate-500 text-xs font-bold uppercase mb-1">Context</span>
+                                        <span id="info-context" class="text-slate-300 text-sm"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Characteristics Card -->
+                        <div class="glass p-6 rounded-2xl border-l-4 border-purple-500 flex flex-col gap-4 hover:bg-slate-800/40 transition-colors">
+                            <div class="flex items-center gap-2 text-purple-400 mb-1">
+                                <i data-lucide="list-music" class="w-4 h-4"></i>
+                                <span class="text-xs font-bold uppercase tracking-wider">Key Characteristics</span>
+                            </div>
+                            <div id="info-characteristics" class="text-slate-200 text-lg leading-relaxed font-light"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-600 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all transform translate-y-10 pointer-events-none z-50 flex items-center gap-3">
+        <i data-lucide="info" class="text-indigo-400 w-5 h-5"></i>
+        <span id="toast-msg">Notification</span>
+    </div>
+
+    <script>
+        // --- DATA ---
+        // Manually mapped from your provided list.
+        // NOTE: Google Drive 'view' links have been auto-converted to 'preview' in the code logic below.
+        const quizData = [
+            { genre: "Paraphrase mass", title: "Pange Lingua Mass: Qui Tollis", composer: "Josquin Desprez", characteristics: "Polyphonic, Sacred, Renaissance", context: "Renaissance Mass", link: "https://drive.google.com/file/d/1Nqq8l-pK28tP9cz-SD-om-8jJGuWEY5h/view?usp=drive_link" },
+            { genre: "Concerto", title: "Violin Concerto in F Minor (Winter)", composer: "Antonio Vivaldi", characteristics: "Solo vs Orchestra, Baroque, Programmatic", context: "1725, The Four Seasons", link: "https://drive.google.com/file/d/1m-V8R5jQu1mnZRDmTCTJN7QWwjnXRBPD/view?usp=drive_link" },
+            { genre: "Oratorio", title: "Hallelujah Chorus (Messiah)", composer: "George Frideric Handel", characteristics: "English, Sacred, Baroque, Chorus", context: "1741", link: "https://drive.google.com/file/d/19NJHiD3kbxnWq48NosXhs6MQjWY2cQk6/view?usp=drive_link" },
+            { genre: "Rondeau", title: "Rondeau from Suite de Symphonies", composer: "Jean-Joseph Mouret", characteristics: "French, Repeating Refrain (ABACA), Baroque", context: "1729", link: "https://drive.google.com/file/d/1Sr2KxBOjDB9TxgobPvGxzoppXkql5jYG/view?usp=drive_link" },
+            { genre: "Anglican Anthem", title: "Sing Joyfully Unto God", composer: "William Byrd", characteristics: "Acapella, English, Renaissance, Sacred", context: "Protestant Reformation", link: "https://drive.google.com/file/d/1RyndOrSCYeKgQYwTk46HqO9RCaZ-B7aI/view?usp=drive_link" },
+            { genre: "Gregorian Chant", title: "Dies Irae", composer: "Anonymous", characteristics: "Monophonic, Latin, Sacred, No pulse", context: "Medieval, Requiem Mass", link: "https://drive.google.com/file/d/1WNP-8HBAg9z2jSzBs1u7wgs-2U8OZigx/view?usp=drive_link" },
+            { genre: "Gregorian Chant", title: "O Rubor Sanguinis", composer: "Hildegard of Bingen", characteristics: "Monophonic, Latin, Sacred, Expressive", context: "12th Century", link: "https://drive.google.com/file/d/1iwIH2TN6NxKtEKIccJlw-AbE-lTbSKyM/view?usp=drive_link" },
+            { genre: "Organum", title: "Viderunt Omnes", composer: "Perotin", characteristics: "Polyphonic (4 voices), Sacred, Notre Dame School", context: "Late 12th Century", link: "https://drive.google.com/file/d/1TKCTG9HyhrEvJZud4cYl-Iw-kRwSfcwo/view?usp=drive_link" },
+            { genre: "Parody Mass", title: "Kyrie (Notre Dame Mass)", composer: "Guillaume de Machaut", characteristics: "Polyphonic, Ars Nova, Sacred", context: "14th Century", link: "https://drive.google.com/file/d/1SKgOT5Fzim3bfGSge2NQGzE_huR-3uTu/view?usp=drive_link" },
+            { genre: "Chanson", title: "A Chanter m'er", composer: "Countess of Dia", characteristics: "Monophonic, Secular, Troubadour song", context: "12th Century", link: "https://drive.google.com/file/d/1-QQM9iGvtttauIn4FuP1LgTbTVw7hvrm/view?usp=drive_link" },
+            { genre: "Carol", title: "Agincourt Carol", composer: "Anonymous", characteristics: "Strophic, English/Latin, Secular/Political", context: "15th Century", link: "https://drive.google.com/file/d/1tlAz6VH4VMI8JAjmDURHy7Z5XJCrt9KW/view?usp=drive_link" },
+            { genre: "Motet", title: "Ave Maria", composer: "Josquin Desprez", characteristics: "Polyphonic, Imitative, Sacred, Latin", context: "High Renaissance", link: "https://drive.google.com/file/d/1XLcv6FqtpUCsyjgsXsovuc6HN7zjO0O2/view?usp=drive_link" },
+            { genre: "Parody Mass", title: "Kyrie (Missa Papae Marcelli)", composer: "Palestrina", characteristics: "Polyphonic, Clear text, Sacred, Counter-Reformation", context: "1562", link: "https://drive.google.com/file/d/1Xmd1pJFNs_GTHICmeFdygv-8w6bPbGY_/view?usp=drive_link" },
+            { genre: "Madrigal", title: "As Vesta Was From Latmos Hill Descending", composer: "Thomas Weelkes", characteristics: "English, Word Painting, Secular", context: "1601", link: "https://drive.google.com/file/d/1dWE9MaASsxM6MLlyUbneZD1Qx9ykAJbX/view?usp=drive_link" },
+            { genre: "Opera", title: "Toccata from Orfeo", composer: "Claudio Monteverdi", characteristics: "Instrumental Overture, Baroque", context: "1607", link: "https://drive.google.com/file/d/1xzE0b1EHYpG4h92YoLsDHgy2gwdm-Bcc/view?usp=drive_link" },
+            { genre: "Opera", title: "Prologue from Orfeo", composer: "Claudio Monteverdi", characteristics: "Monody, Recitative, Baroque", context: "1607", link: "https://drive.google.com/file/d/1XV2Ox1udJ1I72Sn4o75xtMmMqxx2ZwXi/view?usp=drive_link" },
+            { genre: "Opera", title: "Dido and Aeneas (Lament)", composer: "Henry Purcell", characteristics: "English, Ground Bass, Baroque", context: "1689", link: "https://drive.google.com/file/d/1sat_F9ZVc7z9zzwpqKS34NH6oZMePscN/view?usp=drive_link" },
+            { genre: "Canon", title: "Canon in D Major", composer: "Johann Pachelbel", characteristics: "Ground Bass, Imitative Polyphony, Baroque", context: "c. 1680", link: "https://drive.google.com/file/d/161gCxNWceEQyAs4jODIbbhg2bxMqU2t6/view?usp=drive_link" },
+            { genre: "Fugue", title: "Organ Fugue in G Minor", composer: "J.S. Bach", characteristics: "Polyphonic, Subject/Answer, Baroque", context: "c. 1705", link: "https://drive.google.com/file/d/1R_oQ6L2Oxf5C2EyN2vfxe5KRbAIIsZ2f/view?usp=drive_link" },
+            { genre: "Concerto", title: "Brandenburg Concerto No. 5 (I)", composer: "J.S. Bach", characteristics: "Concerto Grosso, Harpsichord Solo, Baroque", context: "1721", link: "https://drive.google.com/file/d/1Hh1hNjRfCb4rOhCaFMj42EUIAcu_BHI8/view?usp=drive_link" },
+            { genre: "Cantata", title: "Wachet Auf (Mvt II)", composer: "J.S. Bach", characteristics: "Recitative, Sacred, Lutheran", context: "1731", link: "https://drive.google.com/file/d/1HElc2JDY8M_k2gH216l_guxDxxNsg1Ev/view?usp=drive_link" },
+            { genre: "Cantata", title: "Wachet Auf (Mvt IV)", composer: "J.S. Bach", characteristics: "Chorale, Unison strings, Sacred", context: "1731", link: "https://drive.google.com/file/d/1nT_pRlImxz1u2esLlaZsiJ5iATp3VxrO/view?usp=drive_link" },
+            { genre: "Dance Suite", title: "Water Music (Minuet and Trio)", composer: "George Frideric Handel", characteristics: "Orchestral, Baroque Dance, Triple Meter", context: "1717", link: "https://drive.google.com/file/d/1R7Tky71uAKSMwztjsoe23qfxq4NbdMmc/view?usp=drive_link" },
+            { genre: "Oratorio", title: "Behold a Virgin... (Messiah)", composer: "George Frideric Handel", characteristics: "Recitative & Aria, English, Sacred", context: "1741", link: "https://drive.google.com/file/d/1f6RoC3QueV2sFGYabjHRTtq16TzX8ZxK/view?usp=drive_link" },
+            { genre: "Oratorio", title: "Messiah Excerpts", composer: "George Frideric Handel", characteristics: "Sacred, Baroque", context: "1741", link: "https://drive.google.com/file/d/1UPmKxzDcGaS_s-aN4DOrzlkA2erWiE35/view?usp=drive_link" },
+            { genre: "Chanson", title: "Fortuna Desperata", composer: "Antoine Busnois", characteristics: "Polyphonic, Secular, Renaissance", context: "15th Century", link: "https://drive.google.com/file/d/1AyScP8mwubS4RGtaNcYJiRD-gWkn2aNn/view?usp=drive_link" },
+            { genre: "Concerto", title: "Brandenburg Concerto No. 5", composer: "J.S. Bach", characteristics: "Concerto Grosso, Baroque", context: "1721", link: "https://drive.google.com/file/d/13gUWFbrVVicE-4Jg0GwuJkm04xNdn1Yn/view?usp=drive_link" },
+            { genre: "Chaconne", title: "Chaconne in G Major", composer: "Andrea Falconieri", characteristics: "Ground Bass, Dance, Early Baroque", context: "17th Century", link: "https://drive.google.com/file/d/18FzMdg87BGxsRpgFT5m27CqV6oGkkKlE/view?usp=drive_link" },
+            { genre: "Lute Song", title: "Flow My Tears", composer: "John Dowland", characteristics: "Solo Voice + Lute, Melancholy, Renaissance", context: "1600", link: "https://drive.google.com/file/d/1_GpizmgSkxwB6rru7JDmBP0WJnf31nHk/view?usp=drive_link" },
+            { genre: "Concerto", title: "Flute Concerto No. 5", composer: "Antonio Vivaldi", characteristics: "Solo Concerto, Baroque", context: "18th Century", link: "https://drive.google.com/file/d/1E7x6GsKqZJTAIGKp3ZcPqcfneMAOV2bo/view?usp=drive_link" },
+            { genre: "Opera", title: "La Dafne (Ohimè che veggio)", composer: "Jacopo Peri", characteristics: "Early Monody, Renaissance/Baroque Transition", context: "c. 1598", link: "https://drive.google.com/file/d/1UzKA16lirFc3T3spwqQy3jszuQoVBano/view?usp=drive_link" },
+            { genre: "Madrigal", title: "Fair Phyllis", composer: "John Farmer", characteristics: "English, Word Painting, A cappella", context: "1599", link: "https://drive.google.com/file/d/1D_IwOOqygGEfZ34nVCJ114MScxZn0g-U/view?usp=drive_link" },
+            { genre: "Chorale", title: "A Mighty Fortress is Our God", composer: "Martin Luther", characteristics: "Hymn, German, Reformation", context: "1529", link: "https://drive.google.com/file/d/1Se3o_Y6-N9mPmdX1pkOg3gTisO8M0qAo/view?usp=drive_link" },
+            { genre: "Dance Suite", title: "Royal Fireworks: Overture", composer: "George Frideric Handel", characteristics: "French Overture Style, Baroque Orchestra", context: "1749", link: "https://drive.google.com/file/d/1BtokaZ2SN_qHNWmiVADnBTzHxdhn89_h/view?usp=drive_link" },
+            { genre: "Dance Suite", title: "Royal Fireworks: Overture (Alt)", composer: "George Frideric Handel", characteristics: "French Overture Style", context: "1749", link: "https://drive.google.com/file/d/1J7YzGL0-a4KRFKr-2jGsFpvqG3a0CMIy/view?usp=drive_link" },
+            { genre: "French Overture", title: "Overture to Armide", composer: "Jean-Baptiste Lully", characteristics: "Dotted Rhythms, Baroque, King Louis XIV", context: "1686", link: "https://drive.google.com/file/d/1Ib83SuXC3gWIbCbQtnY3O5lWhK6osUQN/view?usp=drive_link" },
+            { genre: "Fugue", title: "Prelude & Fugue No. 1 in C Major", composer: "J.S. Bach", characteristics: "Well-Tempered Clavier, Baroque Keyboard", context: "1722", link: "https://drive.google.com/file/d/1axUhbqIH2Fl7dx7mAIhLwddpIXzTUs6G/view?usp=drive_link" },
+            { genre: "Instrumental Motet", title: "Sonate pian' e forte", composer: "Giovanni Gabrieli", characteristics: "Polychoral, Dynamics, Venetian School", context: "1597", link: "https://drive.google.com/file/d/1cn7m0nOQZPws9It9S8dQY4I596lyzXdK/view?usp=drive_link" },
+            { genre: "Fugue", title: "Art of Fugue: Contrapunctus 2", composer: "J.S. Bach", characteristics: "Complex Polyphony, Unfinished Work", context: "c. 1750", link: "https://drive.google.com/file/d/1zcN27W6KKif33ggfhvDszHDuY1HrUNkZ/view?usp=drive_link" }
+        ];
+
+        // --- STATE & UTILS ---
+        let currentIndex = 0;
+        let answered = false;
+        let lastUserGuess = "";
+
+        // Shuffle Array
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Initialize Icons
+        function initIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        // --- APP LOGIC ---
+        function initApp() {
+            shuffle(quizData);
+            document.getElementById('total-count').innerText = quizData.length;
+            loadQuestion(0);
+        }
+
+        function loadQuestion(index) {
+            currentIndex = index;
+            answered = false;
+            lastUserGuess = "";
+            
+            // UI Reset
+            document.getElementById('current-count').innerText = index + 1;
+            document.getElementById('user-guess').value = '';
+            document.getElementById('user-guess').disabled = false;
+            document.getElementById('user-guess').focus();
+            document.getElementById('feedback-panel').classList.add('hidden');
+            document.getElementById('feedback-panel').classList.remove('flex');
+            
+            renderMedia();
+            initIcons();
+        }
+
+        function renderMedia() {
+            const item = quizData[currentIndex];
+            const container = document.getElementById('media-container');
+            const linkBtn = document.getElementById('backup-btn');
+            
+            // Update Link Button
+            linkBtn.href = item.link;
+
+            let src = item.link;
+
+            // Auto-convert Google Drive 'view' links to 'preview'
+            if (src.includes('drive.google.com') && src.includes('/view')) {
+                src = src.replace(/\/view.*/, '/preview');
+            }
+
+            container.innerHTML = `
+                <div class="flex flex-col items-center w-full h-full gap-2 transition-all duration-500 ease-in-out">
+                    <iframe id="main-iframe" src="${src}" 
+                        class="w-full h-full min-h-[350px] rounded-xl shadow-2xl bg-black border border-slate-700/50" 
+                        allow="autoplay; encrypted-media; fullscreen" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+        }
+
+        function handleKeyPress(e) {
+            if(e.key === 'Enter') checkAnswer();
+        }
+
+        function checkAnswer() {
+            if(answered) return;
+            
+            const guessInput = document.getElementById('user-guess');
+            const userGuess = guessInput.value.trim().toLowerCase();
+            const currentItem = quizData[currentIndex];
+            const correctGenre = currentItem.genre.toLowerCase();
+            
+            if (!userGuess) return;
+            
+            answered = true;
+            guessInput.disabled = true;
+
+            // Loose matching
+            const isCorrect = correctGenre.includes(userGuess);
+
+            // Populate Info
+            document.getElementById('info-title').innerText = currentItem.title;
+            document.getElementById('info-composer').innerText = currentItem.composer;
+            document.getElementById('info-context').innerText = currentItem.context;
+            document.getElementById('info-characteristics').innerText = currentItem.characteristics;
+
+            // Render Banner
+            const banner = document.getElementById('result-banner');
+            if (isCorrect) {
+                banner.className = 'p-5 rounded-xl flex items-center gap-4 border border-emerald-500/30 bg-emerald-500/10 shadow-lg shadow-emerald-500/10 backdrop-blur-md';
+                banner.innerHTML = `
+                    <div class="bg-emerald-500 p-2 rounded-full text-white shadow-lg shadow-emerald-500/40"><i data-lucide="check" class="w-6 h-6"></i></div>
+                    <div>
+                        <h3 class="text-emerald-400 font-bold text-lg">Correct Answer!</h3>
+                        <p class="text-emerald-200/70 text-sm">It is indeed <strong>${currentItem.genre}</strong>.</p>
+                    </div>
+                `;
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#10b981', '#34d399', '#6ee7b7'] });
+            } else {
+                banner.className = 'p-5 rounded-xl flex items-center gap-4 border border-red-500/30 bg-red-500/10 shadow-lg shadow-red-500/10 backdrop-blur-md';
+                banner.innerHTML = `
+                    <div class="bg-red-500 p-2 rounded-full text-white shadow-lg shadow-red-500/40"><i data-lucide="x" class="w-6 h-6"></i></div>
+                    <div>
+                        <h3 class="text-red-400 font-bold text-lg">Not quite right.</h3>
+                        <p class="text-red-200/70 text-sm">You guessed <em>"${guessInput.value}"</em>, but it is actually <strong>${currentItem.genre}</strong>.</p>
+                    </div>
+                `;
+            }
+
+            // Show Feedback Panel
+            const panel = document.getElementById('feedback-panel');
+            panel.classList.remove('hidden');
+            panel.classList.add('flex');
+            
+            // Scroll to feedback
+            setTimeout(() => {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+            
+            initIcons();
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                loadQuestion(currentIndex - 1);
+            }
+        }
+
+        function nextQuestion() {
+            if (currentIndex < quizData.length - 1) {
+                loadQuestion(currentIndex + 1);
+            } else {
+                showToast("End of Playlist! Restarting...");
+                setTimeout(() => initApp(), 2000);
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            t.classList.remove('opacity-0', 'translate-y-10');
+            setTimeout(() => t.classList.add('opacity-0', 'translate-y-10'), 3000);
+            initIcons();
+        }
+
+        // --- INIT ---
+        window.onload = () => {
+            initApp();
+            initIcons();
+        };
+
+    </script>
+</body>
+</html>
