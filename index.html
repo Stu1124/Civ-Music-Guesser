@@ -13,34 +13,25 @@
         
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0f172a; 
-            color: #e2e8f0;
+            background-color: #f3f4f6;
+            color: #0f172a;
             overflow-x: hidden;
         }
 
-        /* Gradient Animation */
-        .bg-animated {
-            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #0f172a);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
+        .app-shell {
+            background: radial-gradient(circle at top, #e5edff 0, #f3f4f6 55%, #e5e7eb 100%);
         }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .glass {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        .panel-elevated {
+            background-color: #ffffff;
+            border-radius: 1.25rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
         }
 
         .input-glow:focus {
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-            border-color: #818cf8;
+            box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.5);
+            border-color: #4f46e5;
         }
         
         /* Reveal Animation */
@@ -53,33 +44,33 @@
         /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        ::-webkit-scrollbar-thumb { background: #cbd5f5; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col h-screen overflow-hidden bg-animated text-slate-100">
+<body class="min-h-screen flex flex-col h-screen overflow-hidden app-shell text-slate-900">
 
     <!-- Header -->
-    <header class="glass border-b-0 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center z-30 shadow-xl relative backdrop-blur-xl">
+    <header class="bg-white/90 border-b border-slate-200 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center z-30 shadow-sm backdrop-blur">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <i data-lucide="headphones" class="text-white w-5 h-5"></i>
+            <div class="w-10 h-10 bg-indigo-600/10 border border-indigo-500/30 rounded-xl flex items-center justify-center">
+                <i data-lucide="headphones" class="text-indigo-600 w-5 h-5"></i>
             </div>
             <div class="flex flex-col">
-                <h1 class="font-semibold text-base sm:text-xl text-white tracking-tight">Civ Music Guesser</h1>
-                <p class="text-[10px] sm:text-xs text-slate-400 uppercase tracking-[0.2em]">Music History Listening Lab</p>
+                <h1 class="font-semibold text-base sm:text-xl text-slate-900 tracking-tight">Civ Music Guesser</h1>
+                <p class="text-[10px] sm:text-xs text-slate-500 uppercase tracking-[0.22em]">Music History Listening Lab</p>
             </div>
         </div>
         <div class="flex items-center gap-2 sm:gap-3">
-            <div class="text-[10px] sm:text-xs font-mono text-indigo-300 bg-indigo-950/50 px-2.5 py-1.5 sm:px-3 rounded-full border border-indigo-500/30 mr-1.5 sm:mr-2">
-                TRACK <span id="current-count" class="text-white font-bold">1</span> / <span id="total-count">0</span>
+            <div class="text-[10px] sm:text-xs font-mono text-indigo-700 bg-indigo-50 px-2.5 py-1.5 sm:px-3 rounded-full border border-indigo-200 mr-1.5 sm:mr-2">
+                TRACK <span id="current-count" class="text-slate-900 font-bold">1</span> / <span id="total-count">0</span>
             </div>
             
-            <button onclick="prevQuestion()" class="group bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600/50 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 sm:gap-2" title="Previous Piece">
+            <button onclick="prevQuestion()" class="group bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-1.5 sm:gap-2" title="Previous Piece">
                 <i data-lucide="chevron-left" class="w-4 h-4 transition-transform group-hover:-translate-x-0.5"></i> Back
             </button>
 
-            <button onclick="nextQuestion()" class="group bg-indigo-600 hover:bg-indigo-500 text-white px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all shadow-lg shadow-indigo-500/25 flex items-center gap-1.5 sm:gap-2">
+            <button onclick="nextQuestion()" class="group bg-indigo-600 hover:bg-indigo-500 text-white px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all shadow-md shadow-indigo-500/25 flex items-center gap-1.5 sm:gap-2">
                 Next <i data-lucide="chevron-right" class="w-4 h-4 transition-transform group-hover:translate-x-0.5"></i>
             </button>
         </div>
@@ -92,19 +83,19 @@
         <div class="flex-1 flex flex-col h-full overflow-y-auto relative scroll-smooth">
             
             <!-- Media Player Section -->
-            <div class="w-full bg-black/40 flex flex-col items-center justify-center relative min-h-[260px] sm:min-h-[320px] lg:h-[45%] border-b border-white/5 backdrop-blur-sm transition-all duration-500" id="player-section">
+            <div class="w-full bg-slate-100/60 flex flex-col items-center justify-center relative min-h-[260px] sm:min-h-[320px] lg:h-[45%] border-b border-slate-200 transition-all duration-500" id="player-section">
                 
                 <!-- Player Wrapper -->
                 <div id="media-container" class="w-full h-full max-w-5xl mx-auto flex items-center justify-center p-4 relative overflow-hidden">
                     <div class="text-slate-500 flex flex-col items-center animate-pulse">
                         <i data-lucide="loader" class="w-10 h-10 mb-3 animate-spin text-indigo-500"></i>
-                        <p class="text-sm font-medium tracking-wide">LOADING AUDIO...</p>
+                        <p class="text-sm font-medium tracking-wide">Loading audio…</p>
                     </div>
                 </div>
 
                 <!-- Backup/Direct Link -->
                 <div class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-20">
-                    <a id="backup-btn" href="#" target="_blank" rel="noopener noreferrer" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[10px] sm:text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-slate-600/30 backdrop-blur-md transition-all flex items-center gap-1.5 sm:gap-2 hover:text-white">
+                    <a id="backup-btn" href="#" target="_blank" rel="noopener noreferrer" class="bg-white/95 hover:bg-slate-50 text-slate-700 text-[10px] sm:text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-slate-200 transition-all flex items-center gap-1.5 sm:gap-2 hover:text-slate-900">
                         <i data-lucide="external-link" class="w-3 h-3"></i> 
                         Problem playing? Open Source
                     </a>
@@ -113,33 +104,52 @@
             </div>
 
             <!-- Quiz Section -->
-            <div class="p-5 md:p-8 max-w-4xl mx-auto w-full flex-grow flex flex-col gap-8">
+            <div class="p-4 sm:p-6 md:p-8 max-w-4xl mx-auto w-full flex-grow flex flex-col gap-8">
                 
                 <!-- Input Area -->
                 <div class="flex flex-col gap-3">
-                    <label class="text-indigo-400 font-bold uppercase tracking-widest text-xs flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span> Identify the Genre
+                    <label class="text-indigo-600 font-semibold uppercase tracking-widest text-[11px] sm:text-xs flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Identify the Genre
                     </label>
-                    <h2 class="text-2xl md:text-4xl font-light text-white tracking-tight">What genre is this piece?</h2>
+                    <h2 class="text-2xl md:text-3xl font-semibold text-slate-900 tracking-tight">What genre is this piece?</h2>
+
+                    <!-- Scoreboard -->
+                    <div class="flex flex-wrap items-center gap-2.5 sm:gap-3 text-[11px] sm:text-xs text-slate-700">
+                        <div class="flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            <span class="uppercase tracking-[0.18em] text-[9px] sm:text-[10px] text-emerald-800">Correct</span>
+                            <span id="correct-count" class="font-semibold text-emerald-700 ml-1">0</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                            <span class="uppercase tracking-[0.18em] text-[9px] sm:text-[10px] text-rose-800">Incorrect</span>
+                            <span id="incorrect-count" class="font-semibold text-rose-700 ml-1">0</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-sky-50 px-3 py-1.5 rounded-full border border-sky-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                            <span class="uppercase tracking-[0.18em] text-[9px] sm:text-[10px] text-sky-800">Accuracy</span>
+                            <span id="accuracy" class="font-semibold text-sky-700 ml-1">0%</span>
+                        </div>
+                    </div>
                     
                     <div id="input-area" class="flex flex-col sm:flex-row gap-3 mt-3 sm:mt-4 relative">
                         <input type="text" id="user-guess" 
-                            class="flex-grow bg-slate-900/60 border border-slate-600/50 rounded-xl px-4 sm:px-6 py-3.5 sm:py-4 text-lg sm:text-xl text-white placeholder-slate-500 outline-none input-glow transition-all backdrop-blur-sm"
+                            class="flex-grow bg-white border border-slate-300 rounded-xl px-4 sm:px-6 py-3.5 sm:py-4 text-lg sm:text-xl text-slate-900 placeholder-slate-400 outline-none input-glow transition-all"
                             placeholder="Type your guess here..." 
                             autocomplete="off"
                             onkeypress="handleKeyPress(event)">
-                        <button onclick="checkAnswer()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95">
+                        <button onclick="checkAnswer()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-xl font-semibold transition-all shadow-md shadow-emerald-500/25 hover:-translate-y-0.5 active:translate-y-0">
                             Check
                         </button>
                     </div>
-                    <p class="text-xs sm:text-sm text-slate-400 mt-1 sm:mt-2">Try broad genres like <span class="text-indigo-300">Gregorian Chant</span>, <span class="text-indigo-300">Fugue</span>, <span class="text-indigo-300">Concerto</span>, <span class="text-indigo-300">Madrigal</span>, etc.</p>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1 sm:mt-2">Try broad genres like <span class="font-medium text-slate-700">Gregorian Chant</span>, <span class="font-medium text-slate-700">Fugue</span>, <span class="font-medium text-slate-700">Concerto</span>, <span class="font-medium text-slate-700">Madrigal</span>, etc.</p>
                 </div>
 
                 <!-- Feedback Panel (Hidden by default) -->
                 <div id="feedback-panel" class="hidden flex-col gap-6 reveal-anim pb-20">
                     
                     <!-- Result Banner -->
-                    <div id="result-banner" class="p-5 rounded-xl flex items-center gap-4 border shadow-lg backdrop-blur-md">
+                    <div id="result-banner" class="p-5 rounded-xl flex items-center gap-4 border bg-white shadow-sm">
                         <!-- Injected via JS -->
                     </div>
 
@@ -147,37 +157,37 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
                         <!-- Metadata Card -->
-                        <div class="glass p-6 rounded-2xl border-l-4 border-indigo-500 flex flex-col gap-4 group hover:bg-slate-800/40 transition-colors">
-                            <div class="flex items-center gap-2 text-indigo-400 mb-1">
+                        <div class="panel-elevated p-6 flex flex-col gap-4 group transition-colors">
+                            <div class="flex items-center gap-2 text-indigo-600 mb-1">
                                 <i data-lucide="music" class="w-4 h-4"></i>
-                                <span class="text-xs font-bold uppercase tracking-wider">Piece Details</span>
+                                <span class="text-xs font-semibold uppercase tracking-wider text-slate-700">Piece Details</span>
                             </div>
                             
                             <div class="space-y-4">
                                 <div>
-                                    <span class="block text-slate-500 text-xs font-bold uppercase mb-1">Title</span>
-                                    <span id="info-title" class="text-white font-serif text-2xl leading-tight"></span>
+                                    <span class="block text-slate-500 text-[11px] font-semibold uppercase mb-1">Title</span>
+                                    <span id="info-title" class="text-slate-900 font-serif text-xl md:text-2xl leading-tight"></span>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <span class="block text-slate-500 text-xs font-bold uppercase mb-1">Composer</span>
-                                        <span id="info-composer" class="text-indigo-200 font-medium"></span>
+                                        <span class="block text-slate-500 text-[11px] font-semibold uppercase mb-1">Composer</span>
+                                        <span id="info-composer" class="text-slate-800 font-medium"></span>
                                     </div>
                                     <div>
-                                        <span class="block text-slate-500 text-xs font-bold uppercase mb-1">Context</span>
-                                        <span id="info-context" class="text-slate-300 text-sm"></span>
+                                        <span class="block text-slate-500 text-[11px] font-semibold uppercase mb-1">Context</span>
+                                        <span id="info-context" class="text-slate-700 text-sm"></span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Characteristics Card -->
-                        <div class="glass p-6 rounded-2xl border-l-4 border-purple-500 flex flex-col gap-4 hover:bg-slate-800/40 transition-colors">
-                            <div class="flex items-center gap-2 text-purple-400 mb-1">
+                        <div class="panel-elevated p-6 flex flex-col gap-4 transition-colors">
+                            <div class="flex items-center gap-2 text-purple-700 mb-1">
                                 <i data-lucide="list-music" class="w-4 h-4"></i>
-                                <span class="text-xs font-bold uppercase tracking-wider">Key Characteristics</span>
+                                <span class="text-xs font-semibold uppercase tracking-wider text-slate-700">Key Characteristics</span>
                             </div>
-                            <div id="info-characteristics" class="text-slate-200 text-lg leading-relaxed font-light"></div>
+                            <div id="info-characteristics" class="text-slate-800 text-base leading-relaxed font-normal"></div>
                         </div>
                     </div>
 
@@ -189,8 +199,8 @@
     </main>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-600 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all transform translate-y-10 pointer-events-none z-50 flex items-center gap-3">
-        <i data-lucide="info" class="text-indigo-400 w-5 h-5"></i>
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-5 py-2.5 rounded-full shadow-lg opacity-0 transition-all transform translate-y-10 pointer-events-none z-50 flex items-center gap-3">
+        <i data-lucide="info" class="text-indigo-300 w-5 h-5"></i>
         <span id="toast-msg">Notification</span>
     </div>
 
@@ -232,9 +242,9 @@
             { genre: "Opera", title: "La Dafne (Ohimè che veggio)", composer: "Jacopo Peri", characteristics: "Early opera, Monody/recitative, Through-sung drama", context: "c. 1598", link: "https://drive.google.com/file/d/1UzKA16lirFc3T3spwqQy3jszuQoVBano/view?usp=drive_link" },
             { genre: "Madrigal", title: "Fair Phyllis", composer: "John Farmer", characteristics: "English, Through-composed, Word painting, A cappella", context: "1599", link: "https://drive.google.com/file/d/1D_IwOOqygGEfZ34nVCJ114MScxZn0g-U/view?usp=drive_link" },
             { genre: "Chorale", title: "A Mighty Fortress is Our God", composer: "Martin Luther", characteristics: "German hymn, Simple range for congregation, Call-and-response", context: "1529", link: "https://drive.google.com/file/d/1Se3o_Y6-N9mPmdX1pkOg3gTisO8M0qAo/view?usp=drive_link" },
-            { genre: "French Overture", title: "Royal Fireworks: Overture", composer: "George Frideric Handel", characteristics: "French overture form: slow dotted duple then fast triple", context: "1749", link: "https://drive.google.com/file/d/1BtokaZ2SN_qHNWmiVADnBTzHxdhn89_h/view?usp=drive_link" },
-            { genre: "French Overture", title: "Royal Fireworks: Overture (Alt)", composer: "George Frideric Handel", characteristics: "French overture form: slow duple, dotted; then fast triple", context: "1749", link: "https://drive.google.com/file/d/1J7YzGL0-a4KRFKr-2jGsFpvqG3a0CMIy/view?usp=drive_link" },
-            { genre: "French Overture", title: "Overture to Armide", composer: "Jean-Baptiste Lully", characteristics: "French overture: slow dotted duple then fast triple, Louis XIV court", context: "1686", link: "https://drive.google.com/file/d/1Ib83SuXC3gWIbCbQtnY3O5lWhK6osUQN/view?usp=drive_link" },
+            { genre: "French Overture/Dance Suite", title: "Royal Fireworks: Overture", composer: "George Frideric Handel", characteristics: "French overture form: slow dotted duple then fast triple", context: "1749", link: "https://drive.google.com/file/d/1BtokaZ2SN_qHNWmiVADnBTzHxdhn89_h/view?usp=drive_link" },
+            { genre: "French Overture/Dance Suite", title: "Royal Fireworks: Overture (Alt)", composer: "George Frideric Handel", characteristics: "French overture form: slow duple, dotted; then fast triple", context: "1749", link: "https://drive.google.com/file/d/1J7YzGL0-a4KRFKr-2jGsFpvqG3a0CMIy/view?usp=drive_link" },
+            { genre: "French Overture/Dance Suite", title: "Overture to Armide", composer: "Jean-Baptiste Lully", characteristics: "French overture: slow dotted duple then fast triple, Louis XIV court", context: "1686", link: "https://drive.google.com/file/d/1Ib83SuXC3gWIbCbQtnY3O5lWhK6osUQN/view?usp=drive_link" },
             { genre: "Fugue", title: "Prelude & Fugue No. 1 in C Major", composer: "J.S. Bach", characteristics: "Well-Tempered Clavier, Baroque Keyboard", context: "1722", link: "https://drive.google.com/file/d/1axUhbqIH2Fl7dx7mAIhLwddpIXzTUs6G/view?usp=drive_link" },
             { genre: "Instrumental Motet", title: "Sonate pian' e forte", composer: "Giovanni Gabrieli", characteristics: "Polychoral, Dynamics, Venetian School", context: "1597", link: "https://drive.google.com/file/d/1cn7m0nOQZPws9It9S8dQY4I596lyzXdK/view?usp=drive_link" },
             { genre: "Fugue", title: "Art of Fugue: Contrapunctus 2", composer: "J.S. Bach", characteristics: "Subject/answer entries with free counterpoint episodes, Unfinished work", context: "c. 1750", link: "https://drive.google.com/file/d/1zcN27W6KKif33ggfhvDszHDuY1HrUNkZ/view?usp=drive_link" }
@@ -244,6 +254,8 @@
         let currentIndex = 0;
         let answered = false;
         let lastUserGuess = "";
+        let correctCount = 0;
+        let incorrectCount = 0;
 
         // Shuffle Array
         function shuffle(array) {
@@ -261,11 +273,21 @@
             }
         }
 
+        function updateScoreboard() {
+            const total = correctCount + incorrectCount;
+            const accuracy = total === 0 ? 0 : Math.round((correctCount / total) * 100);
+
+            document.getElementById('correct-count').innerText = correctCount;
+            document.getElementById('incorrect-count').innerText = incorrectCount;
+            document.getElementById('accuracy').innerText = `${accuracy}%`;
+        }
+
         // --- APP LOGIC ---
         function initApp() {
             shuffle(quizData);
             document.getElementById('total-count').innerText = quizData.length;
             loadQuestion(0);
+            updateScoreboard();
         }
 
         function loadQuestion(index) {
@@ -336,6 +358,14 @@
             document.getElementById('info-composer').innerText = currentItem.composer;
             document.getElementById('info-context').innerText = currentItem.context;
             document.getElementById('info-characteristics').innerText = currentItem.characteristics;
+
+            // Update counters
+            if (isCorrect) {
+                correctCount += 1;
+            } else {
+                incorrectCount += 1;
+            }
+            updateScoreboard();
 
             // Render Banner
             const banner = document.getElementById('result-banner');
