@@ -9,207 +9,218 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #1f2937;
+            --surface: #111827;
+            --surface-soft: #0f172a;
+            --text: #e5e7eb;
+            --muted: #94a3b8;
+            --line: #334155;
+            --brand: #0f766e;
+            --brand-dark: #115e59;
+            --accent: #cbd5e1;
+            --ok: #059669;
+            --bad: #dc2626;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a; 
-            color: #e2e8f0;
-            overflow-x: hidden;
+            font-family: 'Manrope', sans-serif;
+            color: var(--text);
+            background: var(--bg);
         }
 
-        /* Gradient Animation */
-        .bg-animated {
-            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #0f172a);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
+        .shell {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            padding: 0;
         }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .glass {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 0;
+            box-shadow: 0 8px 24px rgba(2, 6, 23, 0.28);
         }
 
         .input-glow:focus {
-            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-            border-color: #818cf8;
+            border-color: #14b8a6;
+            box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.14);
         }
-        
-        /* Reveal Animation */
+
+        .btn-primary {
+            background: var(--brand);
+            color: #ffffff;
+            border: 1px solid var(--brand);
+            font-weight: 700;
+        }
+
+        .btn-primary:hover { background: var(--brand-dark); }
+
+        .btn-soft {
+            background: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+            font-weight: 600;
+        }
+
+        .btn-soft:hover { background: #334155; }
+
+        .btn-notebook {
+            background: #0b1220;
+            color: #e2e8f0;
+            border: 1px solid #64748b;
+            font-weight: 700;
+        }
+
+        .btn-notebook:hover {
+            background: #111827;
+            border-color: #94a3b8;
+        }
+
+        .thin-progress {
+            background: #334155;
+            border-radius: 9999px;
+            overflow: hidden;
+            height: 0.6rem;
+        }
+
+        .thin-progress > span {
+            display: block;
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #14b8a6, #0f766e);
+            transition: width 260ms ease;
+        }
+
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         .reveal-anim { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        ::-webkit-scrollbar-thumb { background: #3a4f6f; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4f6990; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col h-screen overflow-hidden bg-animated text-slate-100">
-
-    <!-- Header -->
-    <header class="glass border-b-0 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center z-30 shadow-xl relative backdrop-blur-xl">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <i data-lucide="headphones" class="text-white w-5 h-5"></i>
-            </div>
-            <div class="flex flex-col">
-                <h1 class="font-semibold text-base sm:text-xl text-white tracking-tight">Civ Music Guesser</h1>
-                <p class="text-[10px] sm:text-xs text-slate-400 uppercase tracking-[0.2em]">Music History Listening Lab</p>
-            </div>
-        </div>
-        <div class="flex items-center gap-2 sm:gap-3">
-            <div class="text-[10px] sm:text-xs font-mono text-indigo-300 bg-indigo-950/50 px-2.5 py-1.5 sm:px-3 rounded-full border border-indigo-500/30 mr-1.5 sm:mr-2">
-                TRACK <span id="current-count" class="text-white font-bold">1</span> / <span id="total-count">0</span>
-            </div>
-            
-            <button onclick="prevQuestion()" class="group bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600/50 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 sm:gap-2" title="Previous Piece">
-                <i data-lucide="chevron-left" class="w-4 h-4 transition-transform group-hover:-translate-x-0.5"></i> Back
-            </button>
-
-            <button onclick="nextQuestion()" class="group bg-indigo-600 hover:bg-indigo-500 text-white px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all shadow-lg shadow-indigo-500/25 flex items-center gap-1.5 sm:gap-2">
-                Next <i data-lucide="chevron-right" class="w-4 h-4 transition-transform group-hover:translate-x-0.5"></i>
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Layout -->
-    <main class="flex-grow flex flex-col h-full overflow-hidden relative">
-        
-        <!-- Content Container -->
-        <div class="flex-1 flex flex-col h-full overflow-y-auto relative scroll-smooth">
-            
-            <!-- Media Player Section -->
-            <div class="w-full bg-black/40 flex flex-col items-center justify-center relative min-h-[260px] sm:min-h-[320px] lg:h-[45%] border-b border-white/5 backdrop-blur-sm transition-all duration-500" id="player-section">
-                
-                <!-- Player Wrapper -->
-                <div id="media-container" class="w-full h-full max-w-5xl mx-auto flex items-center justify-center p-4 relative overflow-hidden">
-                    <div class="text-slate-500 flex flex-col items-center animate-pulse">
-                        <i data-lucide="loader" class="w-10 h-10 mb-3 animate-spin text-indigo-500"></i>
-                        <p class="text-sm font-medium tracking-wide">LOADING AUDIO...</p>
-                    </div>
-                </div>
-
-                <!-- Backup/Direct Link -->
-                <div class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-20">
-                    <a id="backup-btn" href="#" target="_blank" rel="noopener noreferrer" class="bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[10px] sm:text-xs px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-slate-600/30 backdrop-blur-md transition-all flex items-center gap-1.5 sm:gap-2 hover:text-white">
-                        <i data-lucide="external-link" class="w-3 h-3"></i> 
-                        Problem playing? Open Source
+<body class="min-h-screen">
+    <main class="shell min-h-screen">
+        <div class="card overflow-hidden min-h-screen">
+        <section class="p-3 sm:p-4 border-b border-slate-700/80">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
+                <h2 class="text-lg sm:text-xl font-extrabold text-slate-100">Civ Music Guesser</h2>
+                <div class="flex items-center gap-2 self-start sm:self-auto">
+                    <a href="https://notebooklm.google.com/notebook/ff074ee3-5859-432e-ab5c-a068cbb613bd" target="_blank" rel="noopener noreferrer" class="btn-notebook px-3 py-1.5 rounded-lg text-xs sm:text-sm inline-flex items-center gap-1.5">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" class="w-3.5 h-3.5 text-cyan-300" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+                            <path d="M8 3v18"></path>
+                            <path d="M11 7h6"></path>
+                            <path d="M11 11h6"></path>
+                            <path d="M11 15h4"></path>
+                        </svg>
+                        NotebookLM
                     </a>
                 </div>
-
             </div>
 
-            <!-- Quiz Section -->
-            <div class="p-5 md:p-8 max-w-4xl mx-auto w-full flex-grow flex flex-col gap-8">
-                
-                <!-- Input Area -->
-                <div class="flex flex-col gap-3">
-                    <label class="text-indigo-400 font-bold uppercase tracking-widest text-xs flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span> Identify the Genre
-                    </label>
-                    <h2 class="text-2xl md:text-4xl font-light text-white tracking-tight">What genre is this piece?</h2>
-
-                    <!-- Scoreboard -->
-                    <div class="flex flex-wrap items-center gap-2.5 sm:gap-3 text-[11px] sm:text-xs text-slate-300">
-                        <div class="flex items-center gap-1.5 bg-slate-900/60 px-3 py-1.5 rounded-full border border-emerald-500/30 shadow-sm shadow-emerald-500/10">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                            <span class="uppercase tracking-[0.18em] text-[9px] sm:text-[10px] text-slate-400">Correct</span>
-                            <span id="correct-count" class="font-semibold text-emerald-300 ml-1">0</span>
-                        </div>
-                        <div class="flex items-center gap-1.5 bg-slate-900/40 px-3 py-1.5 rounded-full border border-rose-500/30 shadow-sm shadow-rose-500/10">
-                            <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                            <span class="uppercase tracking-[0.18em] text-[9px] sm:text-[10px] text-slate-400">Incorrect</span>
-                            <span id="incorrect-count" class="font-semibold text-rose-300 ml-1">0</span>
-                        </div>
-                        <div class="flex items-center gap-1.5 bg-slate-900/40 px-3 py-1.5 rounded-full border border-sky-500/30 shadow-sm shadow-sky-500/10">
-                            <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
-                            <span class="uppercase tracking-[0.18em] text-[9px] sm:text-[10px] text-slate-400">Accuracy</span>
-                            <span id="accuracy" class="font-semibold text-sky-300 ml-1">0%</span>
-                        </div>
-                    </div>
-                    
-                    <div id="input-area" class="flex flex-col sm:flex-row gap-3 mt-3 sm:mt-4 relative">
-                        <input type="text" id="user-guess" 
-                            class="flex-grow bg-slate-900/60 border border-slate-600/50 rounded-xl px-4 sm:px-6 py-3.5 sm:py-4 text-lg sm:text-xl text-white placeholder-slate-500 outline-none input-glow transition-all backdrop-blur-sm"
-                            placeholder="Type your guess here..." 
-                            autocomplete="off"
-                            onkeypress="handleKeyPress(event)">
-                        <button onclick="checkAnswer()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95">
-                            Check
-                        </button>
-                    </div>
-                    <p class="text-xs sm:text-sm text-slate-400 mt-1 sm:mt-2">Try broad genres like <span class="text-indigo-300">Gregorian Chant</span>, <span class="text-indigo-300">Fugue</span>, <span class="text-indigo-300">Concerto</span>, <span class="text-indigo-300">Madrigal</span>, etc.</p>
+            <div id="media-container" class="w-full min-h-[230px] sm:min-h-[290px] rounded-xl border border-slate-700 overflow-hidden bg-slate-900 flex items-center justify-center">
+                <div class="text-slate-500 flex flex-col items-center animate-pulse">
+                    <i data-lucide="loader" class="w-10 h-10 mb-3 animate-spin text-teal-700"></i>
+                    <p class="text-sm font-medium tracking-wide">LOADING AUDIO...</p>
                 </div>
-
-                <!-- Feedback Panel (Hidden by default) -->
-                <div id="feedback-panel" class="hidden flex-col gap-6 reveal-anim pb-20">
-                    
-                    <!-- Result Banner -->
-                    <div id="result-banner" class="p-5 rounded-xl flex items-center gap-4 border shadow-lg backdrop-blur-md">
-                        <!-- Injected via JS -->
-                    </div>
-
-                    <!-- Details Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
-                        <!-- Metadata Card -->
-                        <div class="glass p-6 rounded-2xl border-l-4 border-indigo-500 flex flex-col gap-4 group hover:bg-slate-800/40 transition-colors">
-                            <div class="flex items-center gap-2 text-indigo-400 mb-1">
-                                <i data-lucide="music" class="w-4 h-4"></i>
-                                <span class="text-xs font-bold uppercase tracking-wider">Piece Details</span>
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <div>
-                                    <span class="block text-slate-500 text-xs font-bold uppercase mb-1">Title</span>
-                                    <span id="info-title" class="text-white font-serif text-2xl leading-tight"></span>
-                                </div>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <span class="block text-slate-500 text-xs font-bold uppercase mb-1">Composer</span>
-                                        <span id="info-composer" class="text-indigo-200 font-medium"></span>
-                                    </div>
-                                    <div>
-                                        <span class="block text-slate-500 text-xs font-bold uppercase mb-1">Context</span>
-                                        <span id="info-context" class="text-slate-300 text-sm"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Characteristics Card -->
-                        <div class="glass p-6 rounded-2xl border-l-4 border-purple-500 flex flex-col gap-4 hover:bg-slate-800/40 transition-colors">
-                            <div class="flex items-center gap-2 text-purple-400 mb-1">
-                                <i data-lucide="list-music" class="w-4 h-4"></i>
-                                <span class="text-xs font-bold uppercase tracking-wider">Key Characteristics</span>
-                            </div>
-                            <div id="info-characteristics" class="text-slate-200 text-lg leading-relaxed font-light"></div>
-                        </div>
-                    </div>
-
-                </div>
-
             </div>
+        </section>
+
+        <section class="p-4 sm:p-5 flex flex-col gap-4 border-b border-slate-700/80">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div>
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-teal-400 font-bold">Identify The Genre</p>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-100 mt-1">What genre is this piece?</h2>
+                    <p class="text-sm text-slate-500 mt-2">
+                        Submit your guess below.
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center justify-start sm:justify-end gap-2">
+                    <div class="text-xs font-semibold text-slate-300 bg-slate-800/90 px-3 py-2 rounded-full border border-slate-600/80">
+                        TRACK <span id="current-count" class="text-white font-extrabold">1</span> / <span id="total-count">0</span>
+                    </div>
+                    <button onclick="prevQuestion()" class="btn-soft w-10 h-10 rounded-xl inline-flex items-center justify-center text-lg font-bold" title="Previous Piece" aria-label="Previous Piece">
+                        <span aria-hidden="true">&larr;</span>
+                    </button>
+                    <button onclick="nextQuestion()" class="btn-soft w-10 h-10 rounded-xl inline-flex items-center justify-center text-lg font-bold" title="Next Piece" aria-label="Next Piece">
+                        <span aria-hidden="true">&rarr;</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-2 pt-1">
+                <div class="flex items-center justify-between text-xs text-slate-300">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-700/50 bg-emerald-900/25 text-emerald-200">
+                            <span class="text-emerald-300/90 font-semibold">C</span>
+                            <span id="correct-count" class="font-bold text-emerald-300">0</span>
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-rose-700/50 bg-rose-900/25 text-rose-200">
+                            <span class="text-rose-300/90 font-semibold">I</span>
+                            <span id="incorrect-count" class="font-bold text-rose-300">0</span>
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-sky-700/50 bg-sky-900/25 text-sky-200">
+                            <span class="text-sky-300/90 font-semibold">Accuracy</span>
+                            <span id="accuracy" class="font-bold text-sky-300">0%</span>
+                        </span>
+                    </div>
+                    <span class="text-slate-500 font-medium">Progress</span>
+                </div>
+                <div class="thin-progress">
+                    <span id="progress-fill"></span>
+                </div>
+            </div>
+
+            <div id="input-area" class="flex flex-col sm:flex-row gap-3">
+                <input type="text" id="user-guess"
+                    class="flex-grow bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-lg text-slate-100 placeholder-slate-500 outline-none input-glow transition-all"
+                    placeholder="Type your genre guess..."
+                    autocomplete="off"
+                    onkeypress="handleKeyPress(event)">
+                <button onclick="checkAnswer()" class="btn-primary px-7 py-3 rounded-xl text-base">
+                    Check
+                </button>
+            </div>
+        </section>
+
+        <section id="feedback-panel" class="p-4 sm:p-4 hidden flex-col gap-3 reveal-anim">
+            <div id="result-banner" class="p-4 rounded-xl flex items-center gap-3 border"></div>
+            <div class="bg-slate-900 rounded-xl border border-slate-700 p-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                    <div class="rounded-lg bg-slate-950/60 border border-slate-700 px-3 py-2">
+                        <p class="text-[10px] uppercase tracking-wider text-slate-400">Genre</p>
+                        <p id="info-title" class="text-slate-100 text-lg font-extrabold leading-tight"></p>
+                    </div>
+                    <div class="rounded-lg bg-slate-950/60 border border-slate-700 px-3 py-2">
+                        <p class="text-[10px] uppercase tracking-wider text-slate-400">Title</p>
+                        <p id="info-composer" class="text-slate-200 font-semibold"></p>
+                    </div>
+                    <div class="rounded-lg bg-slate-950/60 border border-slate-700 px-3 py-2">
+                        <p class="text-[10px] uppercase tracking-wider text-slate-400">Artist</p>
+                        <p id="info-context" class="text-slate-200"></p>
+                    </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-slate-700/80">
+                    <p class="text-[10px] uppercase tracking-wider text-slate-400 mb-1">Key Characteristics</p>
+                    <p id="info-characteristics" class="text-slate-200 leading-relaxed"></p>
+                </div>
+            </div>
+        </section>
         </div>
-
     </main>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 border border-slate-600 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all transform translate-y-10 pointer-events-none z-50 flex items-center gap-3">
-        <i data-lucide="info" class="text-indigo-400 w-5 h-5"></i>
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all transform translate-y-10 pointer-events-none z-50 flex items-center gap-3">
+        <i data-lucide="info" class="text-teal-300 w-5 h-5"></i>
         <span id="toast-msg">Notification</span>
     </div>
 
@@ -218,45 +229,20 @@
         // Manually mapped from your provided list.
         // NOTE: Google Drive 'view' links have been auto-converted to 'preview' in the code logic below.
         const quizData = [
-            { genre: "Motet", title: "Pange Lingua Mass: Qui Tollis", composer: "Josquin Desprez", characteristics: "Polyphonic, Sacred, Renaissance", context: "Renaissance Mass", link: "https://drive.google.com/file/d/1Nqq8l-pK28tP9cz-SD-om-8jJGuWEY5h/view?usp=drive_link" },
-            { genre: "Concerto", title: "Violin Concerto in E Major (Spring)", composer: "Antonio Vivaldi", characteristics: "Solo concerto, tutti vs soloist, Baroque, Programmatic (The Four Seasons)", context: "1725, The Four Seasons", link: "https://drive.google.com/file/d/1m-V8R5jQu1mnZRDmTCTJN7QWwjnXRBPD/view?usp=drive_link" },
-            { genre: "Oratorio", title: "Hallelujah Chorus (Messiah)", composer: "George Frideric Handel", characteristics: "English, Sacred, Opera-like but unstaged; Chorus/Arias/Recitatives", context: "1741", link: "https://drive.google.com/file/d/19NJHiD3kbxnWq48NosXhs6MQjWY2cQk6/view?usp=drive_link" },
-            { genre: "Rondeau", title: "Rondeau from Suite de Symphonies", composer: "Jean-Joseph Mouret", characteristics: "French, Repeating Refrain (ABACA), Baroque", context: "1729", link: "https://drive.google.com/file/d/1Sr2KxBOjDB9TxgobPvGxzoppXkql5jYG/view?usp=drive_link" },
-            { genre: "Anglican Anthem", title: "Sing Joyfully Unto God", composer: "William Byrd", characteristics: "Polyphonic a cappella, English text, virtuosic choir, borrows popular tunes", context: "Protestant Reformation", link: "https://drive.google.com/file/d/1RyndOrSCYeKgQYwTk46HqO9RCaZ-B7aI/view?usp=drive_link" },
-            { genre: "Gregorian Chant", title: "Dies Irae", composer: "Anonymous", characteristics: "Monophonic, Latin, Sacred, No pulse", context: "Medieval, Requiem Mass", link: "https://drive.google.com/file/d/1WNP-8HBAg9z2jSzBs1u7wgs-2U8OZigx/view?usp=drive_link" },
-            { genre: "Gregorian Chant", title: "O Rubor Sanguinis", composer: "Hildegard of Bingen", characteristics: "Monophonic, Latin, Sacred, Expressive", context: "12th Century", link: "https://drive.google.com/file/d/1iwIH2TN6NxKtEKIccJlw-AbE-lTbSKyM/view?usp=drive_link" },
-            { genre: "Organum", title: "Viderunt Omnes", composer: "Perotin", characteristics: "Added voices over chant, male choir, Sacred, Notre Dame School", context: "Late 12th Century", link: "https://drive.google.com/file/d/1TKCTG9HyhrEvJZud4cYl-Iw-kRwSfcwo/view?usp=drive_link" },
-            { genre: "Motet (Medieval/Ars Nova)", title: "Kyrie (Messe de Nostre Dame)", composer: "Guillaume de Machaut", characteristics: "Polyphonic, Ars Nova, Mass Ordinary, Sacred", context: "14th Century, Ars Nova", link: "https://drive.google.com/file/d/1SKgOT5Fzim3bfGSge2NQGzE_huR-3uTu/view?usp=drive_link" },
-            { genre: "Chanson", title: "A Chanter m'er", composer: "Countess of Dia", characteristics: "Monophonic, Secular, Troubadour strophic love song", context: "12th Century", link: "https://drive.google.com/file/d/1-QQM9iGvtttauIn4FuP1LgTbTVw7hvrm/view?usp=drive_link" },
-            { genre: "Carol", title: "Agincourt Carol", composer: "Anonymous", characteristics: "Verse-chorus strophic, English/Latin battle song, upbeat with strict rhythm", context: "15th Century", link: "https://drive.google.com/file/d/1tlAz6VH4VMI8JAjmDURHy7Z5XJCrt9KW/view?usp=drive_link" },
-            { genre: "Motet", title: "Ave Maria", composer: "Josquin Desprez", characteristics: "Polyphonic, Imitative, Sacred, Latin", context: "High Renaissance", link: "https://drive.google.com/file/d/1XLcv6FqtpUCsyjgsXsovuc6HN7zjO0O2/view?usp=drive_link" },
-            { genre: "Catholic Music after CoT", title: "Kyrie (Missa Papae Marcelli)", composer: "Palestrina", characteristics: "Light polyphony, clear sacred text, simple counterpoint, constant dynamics", context: "1562, Counter-Reformation", link: "https://drive.google.com/file/d/1Xmd1pJFNs_GTHICmeFdygv-8w6bPbGY_/view?usp=drive_link" },
-            { genre: "Madrigal", title: "As Vesta Was From Latmos Hill Descending", composer: "Thomas Weelkes", characteristics: "English, Through-composed, Word painting, A cappella social art", context: "1601", link: "https://drive.google.com/file/d/1dWE9MaASsxM6MLlyUbneZD1Qx9ykAJbX/view?usp=drive_link" },
-            { genre: "Overture/Toccata", title: "Toccata from Orfeo", composer: "Claudio Monteverdi", characteristics: "Instrumental overture, big and energetic fanfare, Baroque", context: "1607, opens Orfeo", link: "https://drive.google.com/file/d/1xzE0b1EHYpG4h92YoLsDHgy2gwdm-Bcc/view?usp=drive_link" },
-            { genre: "Opera", title: "Prologue from Orfeo", composer: "Claudio Monteverdi", characteristics: "Monody, Recitative, Baroque", context: "1607", link: "https://drive.google.com/file/d/1XV2Ox1udJ1I72Sn4o75xtMmMqxx2ZwXi/view?usp=drive_link" },
-            { genre: "Opera", title: "Dido and Aeneas (Lament)", composer: "Henry Purcell", characteristics: "English, Ground Bass, Baroque", context: "1689", link: "https://drive.google.com/file/d/1sat_F9ZVc7z9zzwpqKS34NH6oZMePscN/view?usp=drive_link" },
-            { genre: "Canon/Round", title: "Canon in D Major", composer: "Johann Pachelbel", characteristics: "Imitative round, Ground bass, Baroque", context: "c. 1680", link: "https://drive.google.com/file/d/161gCxNWceEQyAs4jODIbbhg2bxMqU2t6/view?usp=drive_link" },
-            { genre: "Fugue", title: "Organ Fugue in G Minor", composer: "J.S. Bach", characteristics: "Polyphonic, Subject/Answer, Baroque", context: "c. 1705", link: "https://drive.google.com/file/d/1R_oQ6L2Oxf5C2EyN2vfxe5KRbAIIsZ2f/view?usp=drive_link" },
-            { genre: "Concerto", title: "Brandenburg Concerto No. 5 (I)", composer: "J.S. Bach", characteristics: "Concerto Grosso, Tutti vs concertino, Harpsichord feature, Baroque", context: "1721", link: "https://drive.google.com/file/d/1Hh1hNjRfCb4rOhCaFMj42EUIAcu_BHI8/view?usp=drive_link" },
-            { genre: "Cantata (Church)", title: "Wachet Auf (Mvt II)", composer: "J.S. Bach", characteristics: "Church cantata movement, Recitative/aria blend, Lutheran, Opera-inspired", context: "1731", link: "https://drive.google.com/file/d/1HElc2JDY8M_k2gH216l_guxDxxNsg1Ev/view?usp=drive_link" },
-            { genre: "Cantata (Church)", title: "Wachet Auf (Mvt IV)", composer: "J.S. Bach", characteristics: "Chorale setting, Congregational style, Lutheran cantata", context: "1731", link: "https://drive.google.com/file/d/1nT_pRlImxz1u2esLlaZsiJ5iATp3VxrO/view?usp=drive_link" },
-            { genre: "Baroque Dance Suite", title: "Water Music (Minuet and Trio)", composer: "George Frideric Handel", characteristics: "Orchestral art music, Series of dances in one key, Binary/ternary dance forms", context: "1717", link: "https://drive.google.com/file/d/1R7Tky71uAKSMwztjsoe23qfxq4NbdMmc/view?usp=drive_link" },
-            { genre: "Oratorio", title: "Behold a Virgin... (Messiah)", composer: "George Frideric Handel", characteristics: "English, Sacred, Unstaged drama with recitative/aria/chorus", context: "1741", link: "https://drive.google.com/file/d/1f6RoC3QueV2sFGYabjHRTtq16TzX8ZxK/view?usp=drive_link" },
-            { genre: "Oratorio", title: "Messiah Excerpts", composer: "George Frideric Handel", characteristics: "English sacred oratorio, Chorus/Arias/Recitatives, Unstaged", context: "1741", link: "https://drive.google.com/file/d/1UPmKxzDcGaS_s-aN4DOrzlkA2erWiE35/view?usp=drive_link" },
-            { genre: "Renaissance Motet", title: "Fortuna Desperata", composer: "Antoine Busnois", characteristics: "Polyphonic (secular motet/chanson), Imitative style, Renaissance", context: "15th Century", link: "https://drive.google.com/file/d/1AyScP8mwubS4RGtaNcYJiRD-gWkn2aNn/view?usp=drive_link" },
-            { genre: "Concerto", title: "Brandenburg Concerto No. 5", composer: "J.S. Bach", characteristics: "Concerto Grosso, Tutti vs concertino, Baroque", context: "1721", link: "https://drive.google.com/file/d/13gUWFbrVVicE-4Jg0GwuJkm04xNdn1Yn/view?usp=drive_link" },
-            { genre: "Chaconne", title: "Chaconne in G Major", composer: "Andrea Falconieri", characteristics: "Triple meter, Ground bass, Ornamented rhythm with Spanish influence", context: "17th Century", link: "https://drive.google.com/file/d/18FzMdg87BGxsRpgFT5m27CqV6oGkkKlE/view?usp=drive_link" },
-            { genre: "Lute Song", title: "Flow My Tears", composer: "John Dowland", characteristics: "Solo voice + lute, Strophic, Melancholy, Uses tablature", context: "1600", link: "https://drive.google.com/file/d/1_GpizmgSkxwB6rru7JDmBP0WJnf31nHk/view?usp=drive_link" },
-            { genre: "Concerto", title: "Flute Concerto No. 5", composer: "Antonio Vivaldi", characteristics: "Solo concerto, Tutti vs flute soloist, Baroque", context: "18th Century", link: "https://drive.google.com/file/d/1E7x6GsKqZJTAIGKp3ZcPqcfneMAOV2bo/view?usp=drive_link" },
-            { genre: "Opera", title: "La Dafne (Ohimè che veggio)", composer: "Jacopo Peri", characteristics: "Early opera, Monody/recitative, Through-sung drama", context: "c. 1598", link: "https://drive.google.com/file/d/1UzKA16lirFc3T3spwqQy3jszuQoVBano/view?usp=drive_link" },
-            { genre: "Madrigal", title: "Fair Phyllis", composer: "John Farmer", characteristics: "English, Through-composed, Word painting, A cappella", context: "1599", link: "https://drive.google.com/file/d/1D_IwOOqygGEfZ34nVCJ114MScxZn0g-U/view?usp=drive_link" },
-            { genre: "Chorale", title: "A Mighty Fortress is Our God", composer: "Martin Luther", characteristics: "German hymn, Simple range for congregation, Call-and-response", context: "1529", link: "https://drive.google.com/file/d/1Se3o_Y6-N9mPmdX1pkOg3gTisO8M0qAo/view?usp=drive_link" },
-            { genre: "French Overture/Dance Suite", title: "Royal Fireworks: Overture", composer: "George Frideric Handel", characteristics: "French overture form: slow dotted duple then fast triple", context: "1749", link: "https://drive.google.com/file/d/1BtokaZ2SN_qHNWmiVADnBTzHxdhn89_h/view?usp=drive_link" },
-            { genre: "French Overture/Dance Suite", title: "Royal Fireworks: Overture (Alt)", composer: "George Frideric Handel", characteristics: "French overture form: slow duple, dotted; then fast triple", context: "1749", link: "https://drive.google.com/file/d/1J7YzGL0-a4KRFKr-2jGsFpvqG3a0CMIy/view?usp=drive_link" },
-            { genre: "French Overture/Dance Suite", title: "Overture to Armide", composer: "Jean-Baptiste Lully", characteristics: "French overture: slow dotted duple then fast triple, Louis XIV court", context: "1686", link: "https://drive.google.com/file/d/1Ib83SuXC3gWIbCbQtnY3O5lWhK6osUQN/view?usp=drive_link" },
-            { genre: "Fugue", title: "Prelude & Fugue No. 1 in C Major", composer: "J.S. Bach", characteristics: "Well-Tempered Clavier, Baroque Keyboard", context: "1722", link: "https://drive.google.com/file/d/1axUhbqIH2Fl7dx7mAIhLwddpIXzTUs6G/view?usp=drive_link" },
-            { genre: "Instrumental Motet", title: "Sonate pian' e forte", composer: "Giovanni Gabrieli", characteristics: "Polychoral, Dynamics, Venetian School", context: "1597", link: "https://drive.google.com/file/d/1cn7m0nOQZPws9It9S8dQY4I596lyzXdK/view?usp=drive_link" },
-            { genre: "Fugue", title: "Art of Fugue: Contrapunctus 2", composer: "J.S. Bach", characteristics: "Subject/answer entries with free counterpoint episodes, Unfinished work", context: "c. 1750", link: "https://drive.google.com/file/d/1zcN27W6KKif33ggfhvDszHDuY1HrUNkZ/view?usp=drive_link" }
+            { genre: "Symphony", title: "Symphony 3", composer: "Beethoven", characteristics: "Multi-movement for orchestra; typically 25 mins - 1 hour with 4 movements (fast, slow, minuet, fast) using different musical themes in the same keys.", context: "Not provided", link: "https://drive.google.com/file/d/1mxU0oWiN2i_LotAQuYzVVmzRwJl3HTwX/view?usp=drive_link" },
+            { genre: "Symphony", title: "Symphony 5", composer: "Beethoven", characteristics: "Multi-movement for orchestra; typically 25 mins - 1 hour with 4 movements (fast, slow, minuet, fast) using different musical themes in the same keys.", context: "Not provided", link: "https://drive.google.com/file/d/1xvGRhOuSYvKW0HdsdiA9xAVf_D52Rnj9/view?usp=drive_link" },
+            { genre: "Trumpet Reformation", title: "Trumpet Concerto in E flat", composer: "Haydn", characteristics: "Features a remodeled trumpet that gained valves; famously advanced by maker Anton Weidinger.", context: "Not provided", link: "https://drive.google.com/file/d/1Iy1JPVB1CVBQlLTkg9U2lczQtY4a7jCn/view?usp=drive_link" },
+            { genre: "Serenade", title: "A Little Night Music", composer: "Mozart", characteristics: "Light and airy multi-movement piece for a 4-string ensemble or small orchestra, intended for outdoor evening entertainment.", context: "Not provided", link: "https://drive.google.com/file/d/1m3gA3TTEia-I0sYf82ez1oBmOU4bguhw/view?usp=drive_link" },
+            { genre: "Theme and Variation (form)", title: "Twinkle twinkle", composer: "Mozart", characteristics: "A form where an individual composer demonstrates creativity by taking popular music and changing the melodic lines.", context: "Not provided", link: "https://drive.google.com/file/d/1UGUGyma998fL_wWQBVpeEUiIXaX9d3B7/view?usp=drive_link" },
+            { genre: "String Quartet", title: "Emperor Quartet", composer: "Haydn", characteristics: "Chamber/salon music for small, intimate spaces; features four movements unified by key with one player per part and no conductor.", context: "Not provided", link: "https://drive.google.com/file/d/1kBTbqz2a4dpmXlcEvPCgqY5IxopOYdl3/view?usp=drive_link" },
+            { genre: "Comic Opera (Buffa)", title: "Don Giovanni", composer: "Mozart", characteristics: "Opera focusing on middle class values, social change, and everyday characters and scenes.", context: "Not provided", link: "https://drive.google.com/file/d/1OfABJBzGanlp5XXLdAqZWsy7yKKpyvxW/view?usp=drive_link" },
+            { genre: "Sonata", title: "Piano Sonata", composer: "Beethoven", characteristics: "Multi-movement work for a solo instrument with accompaniment, designed for intimate, small settings for amateurs.", context: "Not provided", link: "https://drive.google.com/file/d/1gVBFqgQPqBYxVKocLY3Bo8vA3qqoHojK/view?usp=drive_link" },
+            { genre: "Art Song", title: "Elf King", composer: "Franz Schubert", characteristics: "Solo voice with piano accompaniment; a fusion of poetry and music featuring strophic form and word painting.", context: "Not provided", link: "https://drive.google.com/file/d/1OZOd8CcQmKYdLTKHyOQJB1Y2FpMaSbR6/view?usp=drive_link" },
+            { genre: "Art Song", title: "If you love for beauty", composer: "Clara Schumann", characteristics: "Solo voice with piano accompaniment; a fusion of poetry and music featuring strophic form and word painting.", context: "Not provided", link: "https://drive.google.com/file/d/1aueZB2fVPz5ZmonyCAIBxV_qjcv0Rh1T/view?usp=drive_link" },
+            { genre: "Nocturne", title: "Nocturne in E flat major", composer: "Frédéric Chopin", characteristics: "Slow, dreamy piano music meant to evoke moonlit nights; features strumming rhythms and a melody playing over a solid bass line.", context: "Not provided", link: "https://drive.google.com/file/d/12FQ9l3hFpF2P45xDLI1Y7Q1DyNqVPltB/view?usp=drive_link" },
+            { genre: "Tone/Symphonic Poem", title: "Romeo and Juliet", composer: "Tchaikovsky", characteristics: "A 1-movement work for orchestra intended for the concert hall to portray emotions/events.", context: "Not provided", link: "https://drive.google.com/file/d/1okFX5BOkfU0TnYnygSGyIsKNVChJu-BL/view?usp=drive_link" },
+            { genre: "Program Symphony", title: "Symphonie Fantastique", composer: "Hector Berlioz", characteristics: "A multi-movement work (3-5 movements) that tells a tale/story from an extra-musical source.", context: "Not provided", link: "https://drive.google.com/file/d/1yUxbS23aURAUgWvLiqqH6GS2v33tZdNf/view?usp=drive_link" },
+            { genre: "Ballet Music", title: "Nutcracker (dance of reed pipes)", composer: "Tchaikovsky", characteristics: "Dramatic dance featuring short bursts of tuneful melodies and pulsating rhythms where characters tell a story through stylized steps and facial expressions.", context: "Not provided", link: "https://drive.google.com/file/d/14a8PwH1ha3mp2lGW1S-L8msVTZlbrYCM/view?usp=drive_link" }
         ];
 
         // --- STATE & UTILS ---
@@ -291,6 +277,94 @@
             document.getElementById('accuracy').innerText = `${accuracy}%`;
         }
 
+        function updateProgress(index) {
+            const total = quizData.length || 1;
+            const current = index + 1;
+            const percent = Math.min(100, Math.round((current / total) * 100));
+            const fill = document.getElementById('progress-fill');
+
+            if (fill) fill.style.width = `${percent}%`;
+        }
+
+        function normalizeText(value) {
+            return value
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/&/g, ' and ')
+                .replace(/[^a-z0-9/\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function editDistance(a, b) {
+            const rows = a.length + 1;
+            const cols = b.length + 1;
+            const dp = Array.from({ length: rows }, () => Array(cols).fill(0));
+
+            for (let i = 0; i < rows; i++) dp[i][0] = i;
+            for (let j = 0; j < cols; j++) dp[0][j] = j;
+
+            for (let i = 1; i < rows; i++) {
+                for (let j = 1; j < cols; j++) {
+                    const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                    dp[i][j] = Math.min(
+                        dp[i - 1][j] + 1,
+                        dp[i][j - 1] + 1,
+                        dp[i - 1][j - 1] + cost
+                    );
+                }
+            }
+
+            return dp[a.length][b.length];
+        }
+
+        function typoThreshold(length) {
+            if (length <= 4) return 0;
+            if (length <= 8) return 1;
+            if (length <= 14) return 2;
+            return 3;
+        }
+
+        function isCloseMatch(guess, candidate) {
+            if (!guess || !candidate) return false;
+            if (guess === candidate) return true;
+
+            if (guess.length >= 4 && (candidate.includes(guess) || guess.includes(candidate))) {
+                return true;
+            }
+
+            const distance = editDistance(guess, candidate);
+            if (distance <= typoThreshold(Math.max(guess.length, candidate.length))) {
+                return true;
+            }
+
+            const guessTokens = guess.split(' ').filter(Boolean);
+            const candidateTokens = candidate.split(' ').filter(Boolean);
+            if (guessTokens.length > 1 && candidateTokens.length > 1) {
+                const allWordsClose = guessTokens.every((gWord) =>
+                    candidateTokens.some((cWord) => {
+                        if (gWord === cWord) return true;
+                        return editDistance(gWord, cWord) <= typoThreshold(Math.max(gWord.length, cWord.length));
+                    })
+                );
+                if (allWordsClose) return true;
+            }
+
+            return false;
+        }
+
+        function getGenreCandidates(genre) {
+            const variants = new Set();
+            const normalizedGenre = normalizeText(genre);
+            variants.add(normalizedGenre);
+
+            const slashParts = genre.split('/').map((part) => normalizeText(part)).filter(Boolean);
+            slashParts.forEach((part) => variants.add(part));
+
+            return Array.from(variants);
+        }
+
         // --- APP LOGIC ---
         function initApp() {
             shuffle(quizData);
@@ -311,6 +385,7 @@
             document.getElementById('user-guess').focus();
             document.getElementById('feedback-panel').classList.add('hidden');
             document.getElementById('feedback-panel').classList.remove('flex');
+            updateProgress(index);
             
             renderMedia();
             initIcons();
@@ -322,7 +397,7 @@
             const linkBtn = document.getElementById('backup-btn');
             
             // Update Link Button
-            linkBtn.href = item.link;
+            if (linkBtn) linkBtn.href = item.link;
 
             let src = item.link;
 
@@ -334,7 +409,7 @@
             container.innerHTML = `
                 <div class="flex flex-col items-center w-full h-full gap-2 transition-all duration-500 ease-in-out">
                     <iframe id="main-iframe" src="${src}" 
-                        class="w-full h-full min-h-[350px] rounded-xl shadow-2xl bg-black border border-slate-700/50" 
+                        class="w-full h-full min-h-[280px] rounded-xl shadow-sm bg-black border border-slate-700" 
                         allow="autoplay; encrypted-media; fullscreen" 
                         allowfullscreen>
                     </iframe>
@@ -350,22 +425,23 @@
             if(answered) return;
             
             const guessInput = document.getElementById('user-guess');
-            const userGuess = guessInput.value.trim().toLowerCase();
+            const userGuessRaw = guessInput.value.trim();
+            const userGuess = normalizeText(userGuessRaw);
             const currentItem = quizData[currentIndex];
-            const correctGenre = currentItem.genre.toLowerCase();
+            const genreCandidates = getGenreCandidates(currentItem.genre);
             
             if (!userGuess) return;
             
             answered = true;
             guessInput.disabled = true;
 
-            // Loose matching
-            const isCorrect = correctGenre.includes(userGuess);
+            // Supports slash-based alternatives and minor misspellings.
+            const isCorrect = genreCandidates.some((candidate) => isCloseMatch(userGuess, candidate));
 
             // Populate Info
-            document.getElementById('info-title').innerText = currentItem.title;
-            document.getElementById('info-composer').innerText = currentItem.composer;
-            document.getElementById('info-context').innerText = currentItem.context;
+            document.getElementById('info-title').innerText = currentItem.genre;
+            document.getElementById('info-composer').innerText = currentItem.title;
+            document.getElementById('info-context').innerText = currentItem.composer;
             document.getElementById('info-characteristics').innerText = currentItem.characteristics;
 
             // Update counters
@@ -379,22 +455,33 @@
             // Render Banner
             const banner = document.getElementById('result-banner');
             if (isCorrect) {
-                banner.className = 'p-5 rounded-xl flex items-center gap-4 border border-emerald-500/30 bg-emerald-500/10 shadow-lg shadow-emerald-500/10 backdrop-blur-md';
+                banner.className = 'p-4 rounded-xl flex items-center gap-3 border border-emerald-700/50 bg-emerald-900/30';
                 banner.innerHTML = `
-                    <div class="bg-emerald-500 p-2 rounded-full text-white shadow-lg shadow-emerald-500/40"><i data-lucide="check" class="w-6 h-6"></i></div>
-                    <div>
-                        <h3 class="text-emerald-400 font-bold text-lg">Correct Answer!</h3>
-                        <p class="text-emerald-200/70 text-sm">It is indeed <strong>${currentItem.genre}</strong>.</p>
+                    <div class="bg-emerald-600 p-2 rounded-full text-white"><i data-lucide="check" class="w-6 h-6"></i></div>
+                    <div class="w-full">
+                        <h3 class="text-emerald-300 font-bold text-lg">Correct Answer!</h3>
+                        <div class="mt-2 inline-flex flex-wrap items-center gap-2 text-sm">
+                            <span class="rounded-md border border-emerald-500/60 bg-emerald-950/40 px-2.5 py-1 text-emerald-100">
+                                Genre: <strong>${currentItem.genre}</strong>
+                            </span>
+                        </div>
                     </div>
                 `;
                 confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#10b981', '#34d399', '#6ee7b7'] });
             } else {
-                banner.className = 'p-5 rounded-xl flex items-center gap-4 border border-red-500/30 bg-red-500/10 shadow-lg shadow-red-500/10 backdrop-blur-md';
+                banner.className = 'p-4 rounded-xl flex items-center gap-3 border border-rose-700/50 bg-rose-900/30';
                 banner.innerHTML = `
-                    <div class="bg-red-500 p-2 rounded-full text-white shadow-lg shadow-red-500/40"><i data-lucide="x" class="w-6 h-6"></i></div>
-                    <div>
-                        <h3 class="text-red-400 font-bold text-lg">Not quite right.</h3>
-                        <p class="text-red-200/70 text-sm">You guessed <em>"${guessInput.value}"</em>, but it is actually <strong>${currentItem.genre}</strong>.</p>
+                    <div class="bg-rose-600 p-2 rounded-full text-white"><i data-lucide="x" class="w-6 h-6"></i></div>
+                    <div class="w-full">
+                        <h3 class="text-rose-300 font-bold text-lg">Not quite right.</h3>
+                        <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                            <span class="rounded-md border border-rose-500/60 bg-rose-950/50 px-2.5 py-1 text-rose-100">
+                                Your guess: <strong>"${guessInput.value}"</strong>
+                            </span>
+                            <span class="rounded-md border border-emerald-500/60 bg-emerald-950/40 px-2.5 py-1 text-emerald-100">
+                                Correct: <strong>${currentItem.genre}</strong>
+                            </span>
+                        </div>
                     </div>
                 `;
             }
@@ -403,11 +490,6 @@
             const panel = document.getElementById('feedback-panel');
             panel.classList.remove('hidden');
             panel.classList.add('flex');
-            
-            // Scroll to feedback
-            setTimeout(() => {
-                panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 100);
             
             initIcons();
         }
@@ -439,6 +521,15 @@
         window.onload = () => {
             initApp();
             initIcons();
+
+            document.addEventListener('keydown', (e) => {
+                const activeEl = document.activeElement;
+                const typingInGuess = activeEl && activeEl.id === 'user-guess';
+
+                if (typingInGuess) return;
+                if (e.key === 'ArrowRight') nextQuestion();
+                if (e.key === 'ArrowLeft') prevQuestion();
+            });
         };
 
     </script>
