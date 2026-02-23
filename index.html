@@ -113,9 +113,14 @@
         <div class="card overflow-hidden min-h-screen">
         <section class="p-3 sm:p-4 border-b border-slate-700/80">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
-                <h2 class="text-lg sm:text-xl font-extrabold text-slate-100">Civ Music Guesser</h2>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h2 id="quiz-title" class="text-lg sm:text-xl font-extrabold text-slate-100">Civ Music Guesser</h2>
+                    <span id="content-status" class="text-[11px] font-semibold px-2 py-1 rounded-full border border-amber-700/50 bg-amber-900/25 text-amber-200">
+                        Content: Fallback
+                    </span>
+                </div>
                 <div class="flex items-center gap-2 self-start sm:self-auto">
-                    <a href="https://notebooklm.google.com/notebook/ff074ee3-5859-432e-ab5c-a068cbb613bd" target="_blank" rel="noopener noreferrer" class="btn-notebook px-3 py-1.5 rounded-lg text-xs sm:text-sm inline-flex items-center gap-1.5">
+                    <a id="notebook-link" href="https://notebooklm.google.com/notebook/ff074ee3-5859-432e-ab5c-a068cbb613bd" target="_blank" rel="noopener noreferrer" class="btn-notebook px-3 py-1.5 rounded-lg text-xs sm:text-sm inline-flex items-center gap-1.5">
                         <svg aria-hidden="true" viewBox="0 0 24 24" class="w-3.5 h-3.5 text-cyan-300" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="4" y="3" width="16" height="18" rx="2"></rect>
                             <path d="M8 3v18"></path>
@@ -264,24 +269,28 @@
     </div>
 
     <script>
-        // --- DATA ---
-        // Manually mapped from your provided list.
-        // NOTE: Google Drive 'view' links have been auto-converted to 'preview' in the code logic below.
-        const fullQuizData = [
-            { genre: "Symphony", title: "Symphony 3", composer: "Beethoven", characteristics: "Multi-movement for orchestra; typically 25 mins - 1 hour with 4 movements (fast, slow, minuet, fast) using different musical themes in the same keys.", context: "Not provided", link: "https://drive.google.com/file/d/1mxU0oWiN2i_LotAQuYzVVmzRwJl3HTwX/view?usp=drive_link" },
-            { genre: "Symphony", title: "Symphony 5", composer: "Beethoven", characteristics: "Multi-movement for orchestra; typically 25 mins - 1 hour with 4 movements (fast, slow, minuet, fast) using different musical themes in the same keys.", context: "Not provided", link: "https://drive.google.com/file/d/1xvGRhOuSYvKW0HdsdiA9xAVf_D52Rnj9/view?usp=drive_link" },
-            { genre: "Trumpet Concerto", title: "Trumpet Concerto in E flat", composer: "Haydn", characteristics: "Features a remodeled trumpet that gained valves; famously advanced by maker Anton Weidinger.", context: "Not provided", link: "https://drive.google.com/file/d/1Iy1JPVB1CVBQlLTkg9U2lczQtY4a7jCn/view?usp=drive_link" },
-            { genre: "Serenade", title: "A Little Night Music", composer: "Mozart", characteristics: "Light and airy multi-movement piece for a 4-string ensemble or small orchestra, intended for outdoor evening entertainment.", context: "Not provided", link: "https://drive.google.com/file/d/1m3gA3TTEia-I0sYf82ez1oBmOU4bguhw/view?usp=drive_link" },
-            { genre: "Theme and Variation (form)", title: "Twinkle twinkle", composer: "Mozart", characteristics: "A form where an individual composer demonstrates creativity by taking popular music and changing the melodic lines.", context: "Not provided", link: "https://drive.google.com/file/d/1UGUGyma998fL_wWQBVpeEUiIXaX9d3B7/view?usp=drive_link" },
-            { genre: "String Quartet", title: "Emperor Quartet", composer: "Haydn", characteristics: "Chamber/salon music for small, intimate spaces; features four movements unified by key with one player per part and no conductor.", context: "Not provided", link: "https://drive.google.com/file/d/1kBTbqz2a4dpmXlcEvPCgqY5IxopOYdl3/view?usp=drive_link" },
-            { genre: "Comic Opera (Buffa)", title: "Don Giovanni", composer: "Mozart", characteristics: "Opera focusing on middle class values, social change, and everyday characters and scenes.", context: "Not provided", link: "https://drive.google.com/file/d/1OfABJBzGanlp5XXLdAqZWsy7yKKpyvxW/view?usp=drive_link" },
-            { genre: "Sonata", title: "Piano Sonata", composer: "Beethoven", characteristics: "Multi-movement work for a solo instrument with accompaniment, designed for intimate, small settings for amateurs.", context: "Not provided", link: "https://drive.google.com/file/d/1gVBFqgQPqBYxVKocLY3Bo8vA3qqoHojK/view?usp=drive_link" },
-            { genre: "Art Song", title: "Elf King", composer: "Franz Schubert", characteristics: "Solo voice with piano accompaniment; a fusion of poetry and music featuring strophic form and word painting.", context: "Not provided", link: "https://drive.google.com/file/d/1OZOd8CcQmKYdLTKHyOQJB1Y2FpMaSbR6/view?usp=drive_link" },
-            { genre: "Art Song", title: "If you love for beauty", composer: "Clara Schumann", characteristics: "Solo voice with piano accompaniment; a fusion of poetry and music featuring strophic form and word painting.", context: "Not provided", link: "https://drive.google.com/file/d/1aueZB2fVPz5ZmonyCAIBxV_qjcv0Rh1T/view?usp=drive_link" },
-            { genre: "Nocturne", title: "Nocturne in E flat major", composer: "Frédéric Chopin", characteristics: "Slow, dreamy piano music meant to evoke moonlit nights; features strumming rhythms and a melody playing over a solid bass line.", context: "Not provided", link: "https://drive.google.com/file/d/12FQ9l3hFpF2P45xDLI1Y7Q1DyNqVPltB/view?usp=drive_link" },
-            { genre: "Tone/Symphonic Poem", title: "Romeo and Juliet", composer: "Tchaikovsky", characteristics: "A 1-movement work for orchestra intended for the concert hall to portray emotions/events.", context: "Not provided", link: "https://drive.google.com/file/d/1okFX5BOkfU0TnYnygSGyIsKNVChJu-BL/view?usp=drive_link" },
-            { genre: "Program Symphony", title: "Symphonie Fantastique", composer: "Hector Berlioz", characteristics: "A multi-movement work (3-5 movements) that tells a tale/story from an extra-musical source.", context: "Not provided", link: "https://drive.google.com/file/d/1yUxbS23aURAUgWvLiqqH6GS2v33tZdNf/view?usp=drive_link" },
-            { genre: "Ballet Music", title: "Nutcracker (dance of reed pipes)", composer: "Tchaikovsky", characteristics: "Dramatic dance featuring short bursts of tuneful melodies and pulsating rhythms where characters tell a story through stylized steps and facial expressions.", context: "Not provided", link: "https://drive.google.com/file/d/14a8PwH1ha3mp2lGW1S-L8msVTZlbrYCM/view?usp=drive_link" }
+        // --- DATA CONFIG ---
+        // Publish your Google Sheet tabs as CSV and paste links below.
+        const USE_REMOTE_DATA = true;
+        const DATA_SOURCE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSxvwv2bZYqhdOEIkK2-EY3UXlyvldhHb5Z_L9DGqwInaEHj_B4kmgVyQyC2gp9ApV1rBgeyaiQVe2c/pub?gid=0&single=true&output=csv';
+        const SETTINGS_SOURCE_URL = '';
+
+        // Local fallback data if remote load fails or is empty.
+        const fallbackQuizData = [
+            { genre: "Symphony", title: "Symphony 3", composer: "Beethoven", characteristics: "Multi-movement for orchestra; typically 25 mins - 1 hour with 4 movements (fast, slow, minuet, fast) using different musical themes in the same keys.", context: "Not provided", link: "https://drive.google.com/file/d/1mxU0oWiN2i_LotAQuYzVVmzRwJl3HTwX/view?usp=drive_link", altGenres: [] },
+            { genre: "Symphony", title: "Symphony 5", composer: "Beethoven", characteristics: "Multi-movement for orchestra; typically 25 mins - 1 hour with 4 movements (fast, slow, minuet, fast) using different musical themes in the same keys.", context: "Not provided", link: "https://drive.google.com/file/d/1xvGRhOuSYvKW0HdsdiA9xAVf_D52Rnj9/view?usp=drive_link", altGenres: [] },
+            { genre: "Trumpet Concerto", title: "Trumpet Concerto in E flat", composer: "Haydn", characteristics: "Features a remodeled trumpet that gained valves; famously advanced by maker Anton Weidinger.", context: "Not provided", link: "https://drive.google.com/file/d/1Iy1JPVB1CVBQlLTkg9U2lczQtY4a7jCn/view?usp=drive_link", altGenres: [] },
+            { genre: "Serenade", title: "A Little Night Music", composer: "Mozart", characteristics: "Light and airy multi-movement piece for a 4-string ensemble or small orchestra, intended for outdoor evening entertainment.", context: "Not provided", link: "https://drive.google.com/file/d/1m3gA3TTEia-I0sYf82ez1oBmOU4bguhw/view?usp=drive_link", altGenres: [] },
+            { genre: "Theme and Variation (form)", title: "Twinkle twinkle", composer: "Mozart", characteristics: "A form where an individual composer demonstrates creativity by taking popular music and changing the melodic lines.", context: "Not provided", link: "https://drive.google.com/file/d/1UGUGyma998fL_wWQBVpeEUiIXaX9d3B7/view?usp=drive_link", altGenres: [] },
+            { genre: "String Quartet", title: "Emperor Quartet", composer: "Haydn", characteristics: "Chamber/salon music for small, intimate spaces; features four movements unified by key with one player per part and no conductor.", context: "Not provided", link: "https://drive.google.com/file/d/1kBTbqz2a4dpmXlcEvPCgqY5IxopOYdl3/view?usp=drive_link", altGenres: [] },
+            { genre: "Comic Opera (Buffa)", title: "Don Giovanni", composer: "Mozart", characteristics: "Opera focusing on middle class values, social change, and everyday characters and scenes.", context: "Not provided", link: "https://drive.google.com/file/d/1OfABJBzGanlp5XXLdAqZWsy7yKKpyvxW/view?usp=drive_link", altGenres: [] },
+            { genre: "Sonata", title: "Piano Sonata", composer: "Beethoven", characteristics: "Multi-movement work for a solo instrument with accompaniment, designed for intimate, small settings for amateurs.", context: "Not provided", link: "https://drive.google.com/file/d/1gVBFqgQPqBYxVKocLY3Bo8vA3qqoHojK/view?usp=drive_link", altGenres: [] },
+            { genre: "Art Song", title: "Elf King", composer: "Franz Schubert", characteristics: "Solo voice with piano accompaniment; a fusion of poetry and music featuring strophic form and word painting.", context: "Not provided", link: "https://drive.google.com/file/d/1OZOd8CcQmKYdLTKHyOQJB1Y2FpMaSbR6/view?usp=drive_link", altGenres: [] },
+            { genre: "Art Song", title: "If you love for beauty", composer: "Clara Schumann", characteristics: "Solo voice with piano accompaniment; a fusion of poetry and music featuring strophic form and word painting.", context: "Not provided", link: "https://drive.google.com/file/d/1aueZB2fVPz5ZmonyCAIBxV_qjcv0Rh1T/view?usp=drive_link", altGenres: [] },
+            { genre: "Nocturne", title: "Nocturne in E flat major", composer: "Frédéric Chopin", characteristics: "Slow, dreamy piano music meant to evoke moonlit nights; features strumming rhythms and a melody playing over a solid bass line.", context: "Not provided", link: "https://drive.google.com/file/d/12FQ9l3hFpF2P45xDLI1Y7Q1DyNqVPltB/view?usp=drive_link", altGenres: [] },
+            { genre: "Tone/Symphonic Poem", title: "Romeo and Juliet", composer: "Tchaikovsky", characteristics: "A 1-movement work for orchestra intended for the concert hall to portray emotions/events.", context: "Not provided", link: "https://drive.google.com/file/d/1okFX5BOkfU0TnYnygSGyIsKNVChJu-BL/view?usp=drive_link", altGenres: [] },
+            { genre: "Program Symphony", title: "Symphonie Fantastique", composer: "Hector Berlioz", characteristics: "A multi-movement work (3-5 movements) that tells a tale/story from an extra-musical source.", context: "Not provided", link: "https://drive.google.com/file/d/1yUxbS23aURAUgWvLiqqH6GS2v33tZdNf/view?usp=drive_link", altGenres: [] },
+            { genre: "Ballet Music", title: "Nutcracker (dance of reed pipes)", composer: "Tchaikovsky", characteristics: "Dramatic dance featuring short bursts of tuneful melodies and pulsating rhythms where characters tell a story through stylized steps and facial expressions.", context: "Not provided", link: "https://drive.google.com/file/d/14a8PwH1ha3mp2lGW1S-L8msVTZlbrYCM/view?usp=drive_link", altGenres: [] }
         ];
 
         // --- STATE & UTILS ---
@@ -293,6 +302,7 @@
         let questionResults = [];
         let activeQuizData = [];
         let roundMode = 'full';
+        let loadedQuizData = [...fallbackQuizData];
 
         // Shuffle Array
         function shuffle(array) {
@@ -307,6 +317,182 @@
         function initIcons() {
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
+            }
+        }
+
+        function setContentStatus(mode) {
+            const el = document.getElementById('content-status');
+            if (!el) return;
+
+            if (mode === 'live') {
+                el.innerText = 'Content: Live';
+                el.className = 'text-[11px] font-semibold px-2 py-1 rounded-full border border-emerald-700/50 bg-emerald-900/25 text-emerald-200';
+                return;
+            }
+
+            el.innerText = 'Content: Fallback';
+            el.className = 'text-[11px] font-semibold px-2 py-1 rounded-full border border-amber-700/50 bg-amber-900/25 text-amber-200';
+        }
+
+        function parseCsv(text) {
+            const rows = [];
+            let row = [];
+            let value = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const next = text[i + 1];
+
+                if (char === '"') {
+                    if (inQuotes && next === '"') {
+                        value += '"';
+                        i += 1;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                    continue;
+                }
+
+                if (char === ',' && !inQuotes) {
+                    row.push(value);
+                    value = '';
+                    continue;
+                }
+
+                if ((char === '\n' || char === '\r') && !inQuotes) {
+                    if (char === '\r' && next === '\n') i += 1;
+                    row.push(value);
+                    if (row.some((cell) => cell.trim() !== '')) rows.push(row);
+                    row = [];
+                    value = '';
+                    continue;
+                }
+
+                value += char;
+            }
+
+            row.push(value);
+            if (row.some((cell) => cell.trim() !== '')) rows.push(row);
+            if (rows.length === 0) return [];
+
+            const headers = rows[0].map((h) => h.trim().toLowerCase());
+            return rows.slice(1).map((r) => {
+                const out = {};
+                headers.forEach((header, idx) => {
+                    out[header] = (r[idx] || '').trim();
+                });
+                return out;
+            });
+        }
+
+        function isEnabledValue(value) {
+            const normalized = (value || '').toString().trim().toLowerCase();
+            return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'y';
+        }
+
+        function validateTrack(row, rowNumber) {
+            const errors = [];
+            const requiredFields = ['genre', 'title', 'composer', 'characteristics', 'link'];
+
+            requiredFields.forEach((field) => {
+                if (!(row[field] || '').trim()) {
+                    errors.push(`Row ${rowNumber}: missing required field "${field}".`);
+                }
+            });
+
+            if ((row.link || '').trim()) {
+                try {
+                    new URL(row.link.trim());
+                } catch (err) {
+                    errors.push(`Row ${rowNumber}: invalid URL in "link".`);
+                }
+            }
+
+            return errors;
+        }
+
+        function normalizeTrack(row) {
+            return {
+                genre: (row.genre || '').trim(),
+                title: (row.title || '').trim(),
+                composer: (row.composer || '').trim(),
+                characteristics: (row.characteristics || '').trim(),
+                context: (row.context || 'Not provided').trim() || 'Not provided',
+                link: (row.link || '').trim(),
+                altGenres: (row.alt_genres || '')
+                    .split('|')
+                    .map((v) => v.trim())
+                    .filter(Boolean)
+            };
+        }
+
+        async function fetchRowsFromSource(url) {
+            const response = await fetch(url, { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error(`Data request failed with status ${response.status}.`);
+            }
+
+            const text = await response.text();
+            return parseCsv(text);
+        }
+
+        async function fetchQuizData() {
+            if (!USE_REMOTE_DATA) {
+                return { tracks: [...fallbackQuizData], warnings: [], source: 'fallback' };
+            }
+            if (!DATA_SOURCE_URL.trim()) {
+                throw new Error('DATA_SOURCE_URL is empty.');
+            }
+
+            const rows = await fetchRowsFromSource(DATA_SOURCE_URL.trim());
+            const warnings = [];
+            const tracks = [];
+
+            rows.forEach((row, idx) => {
+                const rowNumber = idx + 2;
+                if (!isEnabledValue(row.enabled)) return;
+
+                const errors = validateTrack(row, rowNumber);
+                if (errors.length > 0) {
+                    warnings.push(...errors);
+                    return;
+                }
+                tracks.push(normalizeTrack(row));
+            });
+
+            if (tracks.length === 0) {
+                throw new Error('No valid enabled tracks were found in the sheet.');
+            }
+
+            return { tracks, warnings, source: 'live' };
+        }
+
+        async function fetchSettings() {
+            if (!SETTINGS_SOURCE_URL.trim()) return {};
+            const rows = await fetchRowsFromSource(SETTINGS_SOURCE_URL.trim());
+            const settings = {};
+
+            rows.forEach((row) => {
+                const key = (row.key || '').trim();
+                if (!key) return;
+                settings[key] = (row.value || '').trim();
+            });
+
+            return settings;
+        }
+
+        function applySettings(settings) {
+            if (!settings) return;
+
+            if (settings.notebook_url) {
+                const notebook = document.getElementById('notebook-link');
+                if (notebook) notebook.href = settings.notebook_url;
+            }
+
+            if (settings.quiz_title) {
+                const title = document.getElementById('quiz-title');
+                if (title) title.innerText = settings.quiz_title;
             }
         }
 
@@ -402,13 +588,21 @@
             return false;
         }
 
-        function getGenreCandidates(genre) {
+        function getGenreCandidates(itemOrGenre) {
+            const genre = typeof itemOrGenre === 'string' ? itemOrGenre : (itemOrGenre && itemOrGenre.genre) || '';
             const variants = new Set();
             const normalizedGenre = normalizeText(genre);
             variants.add(normalizedGenre);
 
             const slashParts = genre.split('/').map((part) => normalizeText(part)).filter(Boolean);
             slashParts.forEach((part) => variants.add(part));
+
+            if (itemOrGenre && typeof itemOrGenre === 'object' && Array.isArray(itemOrGenre.altGenres)) {
+                itemOrGenre.altGenres
+                    .map((alt) => normalizeText(alt))
+                    .filter(Boolean)
+                    .forEach((alt) => variants.add(alt));
+            }
 
             return Array.from(variants);
         }
@@ -420,7 +614,7 @@
 
         function startFullRound() {
             roundMode = 'full';
-            activeQuizData = [...fullQuizData];
+            activeQuizData = [...loadedQuizData];
             shuffle(activeQuizData);
             correctCount = 0;
             incorrectCount = 0;
@@ -531,7 +725,7 @@
             const userGuessRaw = guessInput.value.trim();
             const userGuess = normalizeText(userGuessRaw);
             const currentItem = activeQuizData[currentIndex];
-            const genreCandidates = getGenreCandidates(currentItem.genre);
+            const genreCandidates = getGenreCandidates(currentItem);
             
             if (!userGuess) return;
             
@@ -564,7 +758,7 @@
             if (result.isCorrect) {
                 banner.className = 'p-4 rounded-xl flex items-center gap-3 border border-emerald-700/50 bg-emerald-900/30';
                 banner.innerHTML = `
-                    <div class="bg-emerald-600 p-2 rounded-full text-white"><i data-lucide="check" class="w-6 h-6"></i></div>
+                     <div class="bg-emerald-600 p-2 rounded-full text-white"><i data-lucide="check" class="w-6 h-6"></i></div>
                     <div class="w-full">
                         <h3 class="text-emerald-300 font-bold text-lg">Correct Answer!</h3>
                         <div class="mt-2 inline-flex flex-wrap items-center gap-2 text-sm">
@@ -692,9 +886,47 @@
             initIcons();
         }
 
-        // --- INIT ---
-        window.onload = () => {
+        async function bootstrapApp() {
+            let usedFallback = false;
+            let skippedRowCount = 0;
+
+            if (USE_REMOTE_DATA) {
+                try {
+                    const [quizData, settings] = await Promise.all([
+                        fetchQuizData(),
+                        fetchSettings().catch(() => ({}))
+                    ]);
+                    loadedQuizData = quizData.tracks;
+                    skippedRowCount = quizData.warnings.length;
+                    applySettings(settings);
+                } catch (err) {
+                    usedFallback = true;
+                    loadedQuizData = [...fallbackQuizData];
+                }
+            } else {
+                usedFallback = true;
+                loadedQuizData = [...fallbackQuizData];
+            }
+
+            if (!Array.isArray(loadedQuizData) || loadedQuizData.length === 0) {
+                usedFallback = true;
+                loadedQuizData = [...fallbackQuizData];
+            }
+
+            setContentStatus(usedFallback ? 'fallback' : 'live');
             initApp();
+
+            if (skippedRowCount > 0) {
+                showToast(`${skippedRowCount} data issue${skippedRowCount === 1 ? '' : 's'} found in sheet. Invalid rows were skipped.`);
+            }
+
+            if (usedFallback && USE_REMOTE_DATA) {
+                showToast('Remote sheet unavailable. Using fallback content.');
+            }
+        }
+
+        // --- INIT ---
+        window.onload = async () => {
             initIcons();
 
             document.addEventListener('keydown', (e) => {
@@ -705,6 +937,8 @@
                 if (e.key === 'ArrowRight') nextQuestion();
                 if (e.key === 'ArrowLeft') prevQuestion();
             });
+
+            await bootstrapApp();
         };
 
     </script>

@@ -1,59 +1,110 @@
-## Civ Music Guesser – Music History Listening Lab
+## Civ Music Guesser – Teacher-Managed Content
 
-An interactive listening lab for music history. The app randomly selects a piece, plays the audio via Google Drive, and asks you to guess the **genre**. After you answer, it reveals the title, composer, context, and key characteristics.
+This app now supports **no-code content management** through Google Sheets.
+Your teacher can add/edit tracks (genre, title, composer, characteristics, links) in a sheet, and all students will load the same live data.
 
 ### How it works
 
-- **Player**: Embeds Google Drive preview links in an iframe so audio can play directly in the browser.
-- **Quiz flow**:
-  - The playlist is shuffled on load.
-  - You type a genre (e.g. `Gregorian Chant`, `Fugue`, `Concerto`, `Madrigal`, etc.).
-  - The app loosely matches your text against the correct genre and shows a success or error banner.
-  - It then reveals detailed information about the piece.
-- **Styling**: Uses Tailwind CSS via CDN plus a small amount of custom CSS (glassmorphism, animated gradient background, and smooth reveal animations).
+- The quiz tries to load track data from a published Google Sheet CSV endpoint.
+- If remote data fails, the app automatically falls back to local built-in tracks.
+- A header badge shows current source:
+  - `Content: Live`
+  - `Content: Fallback`
 
-### Running locally
+## Teacher update workflow
 
-1. Open `index.html` in your browser (double‑click it or drag it into a browser window).
-2. Make sure you are online so the Tailwind, icons, and Google Drive audio all load correctly.
+### 1. Create a Google Sheet tab named `tracks`
 
-### Deploying to GitHub Pages
+Use this exact header row:
 
-1. **Create a Git repository (once per project)**  
-   Open a terminal in the project folder:
-   ```bash
-   cd "/Users/aristusachdev/Desktop/coding/Civ Music Guesser"
-   git init
-   git add .
-   git commit -m "Initial commit: Civ Music Guesser"
-   ```
+- `enabled`
+- `genre`
+- `alt_genres`
+- `title`
+- `composer`
+- `characteristics`
+- `context`
+- `link`
 
-2. **Create a GitHub repository**
-   - Go to GitHub and create a new repo (for example `civ-music-guesser`) **without** adding any files (no README, no .gitignore).
-   - GitHub will show you a URL like `https://github.com/your-username/civ-music-guesser.git`.
+Field rules:
 
-3. **Connect local repo to GitHub and push**
-   ```bash
-   git remote add origin https://github.com/YOUR-USERNAME/civ-music-guesser.git
-   git branch -M main
-   git push -u origin main
-   ```
+- `enabled`: use `TRUE` to include row (`FALSE` excludes it)
+- `genre`: required
+- `alt_genres`: optional, `|` separated (example: `Tone Poem|Symphonic Poem`)
+- `title`: required
+- `composer`: required
+- `characteristics`: required
+- `context`: optional
+- `link`: required, must be a valid URL
 
-4. **Enable GitHub Pages**
-   - In your GitHub repo, go to **Settings → Pages**.
-   - Under **Source**, choose **Deploy from a branch**.
-   - Select branch: `main`, folder: `/ (root)`.
-   - Save. GitHub will build and give you a Pages URL like `https://your-username.github.io/civ-music-guesser/`.
+### 2. Optional settings tab
 
-5. **Visit your app**
-   - Open the Pages URL in a browser.
-   - The app entry file is `index.html` at the repo root, which GitHub Pages will automatically serve.
+Create a second tab named `settings` with headers:
 
-### Notes
+- `key`
+- `value`
 
-- All audio links are expected to be valid Google Drive file URLs that support preview.  
-- Because the app loads external CDNs (Tailwind, lucide icons, canvas-confetti) and Google Drive embeds, it requires an active internet connection to work correctly.
+Supported keys:
 
+- `notebook_url` (replaces NotebookLM button link)
+- `quiz_title` (replaces app title text)
 
+### 3. Publish sheet tabs as CSV
 
+For each tab (`tracks`, optional `settings`):
 
+1. Open the sheet tab.
+2. Use **File -> Share -> Publish to web**.
+3. Select the specific tab.
+4. Choose format: **CSV**.
+5. Copy the generated CSV URL.
+
+### 4. Paste URLs into `index.html`
+
+Edit these constants in `index.html`:
+
+- `DATA_SOURCE_URL`: CSV URL for `tracks`
+- `SETTINGS_SOURCE_URL`: CSV URL for `settings` (or leave empty)
+- `USE_REMOTE_DATA`: keep `true` for live sheet loading
+
+## Data contract used by the app
+
+Each valid `tracks` row is normalized to:
+
+```js
+{
+  genre: string,
+  title: string,
+  composer: string,
+  characteristics: string,
+  context: string,
+  link: string,
+  altGenres: string[]
+}
+```
+
+## Validation and safety behavior
+
+- Rows with `enabled != TRUE` are skipped.
+- Rows missing required fields are skipped.
+- Rows with invalid `link` URLs are skipped.
+- If all rows are invalid (or network/publish issue exists), fallback content is used.
+- The app displays a non-blocking toast when rows are skipped.
+
+## Troubleshooting
+
+- `Content: Fallback` always appears:
+  - Confirm `DATA_SOURCE_URL` is set and publicly readable CSV.
+  - Confirm tab headers exactly match required keys.
+  - Confirm at least one row has `enabled = TRUE` and valid required fields.
+- Settings not applying:
+  - Confirm `SETTINGS_SOURCE_URL` points to CSV with `key,value` headers.
+  - Check keys are exactly `notebook_url` or `quiz_title`.
+- Audio not playing:
+  - Verify the `link` URL is valid and embeddable.
+  - For Google Drive links, sharing/permissions must allow playback.
+
+## Local run
+
+1. Open `index.html` in a browser.
+2. Ensure internet access for external assets and remote sheet loading.
