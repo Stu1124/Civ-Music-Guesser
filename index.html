@@ -149,6 +149,9 @@
                     <div class="text-xs font-semibold text-slate-300 bg-slate-800/90 px-3 py-2 rounded-full border border-slate-600/80">
                         TRACK <span id="current-count" class="text-white font-extrabold">1</span> / <span id="total-count">0</span>
                     </div>
+                    <div id="mode-badge" class="text-xs font-semibold text-cyan-200 bg-cyan-900/25 px-3 py-2 rounded-full border border-cyan-700/50">
+                        MODE: Full Quiz
+                    </div>
                     <button onclick="prevQuestion()" class="btn-soft w-10 h-10 rounded-xl inline-flex items-center justify-center text-lg font-bold" title="Previous Piece" aria-label="Previous Piece">
                         <span aria-hidden="true">&larr;</span>
                     </button>
@@ -187,7 +190,7 @@
                     placeholder="Type your genre guess..."
                     autocomplete="off"
                     onkeypress="handleKeyPress(event)">
-                <button onclick="checkAnswer()" class="btn-primary px-7 py-3 rounded-xl text-base">
+                <button id="submit-btn" onclick="checkAnswer()" class="btn-primary px-7 py-3 rounded-xl text-base">
                     Check
                 </button>
             </div>
@@ -224,14 +227,50 @@
         <span id="toast-msg">Notification</span>
     </div>
 
+    <div id="end-quiz-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 p-4">
+        <div class="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+            <p class="text-[11px] uppercase tracking-[0.14em] text-teal-400 font-bold">Playlist Complete</p>
+            <h3 class="mt-2 text-2xl font-extrabold text-slate-100">What would you like to do next?</h3>
+            <p class="mt-2 text-sm text-slate-400">You can review your results or restart with a fresh score.</p>
+            <div class="mt-5 flex flex-col sm:flex-row gap-3">
+                <button onclick="showResultsSummary()" class="btn-primary rounded-xl px-4 py-2.5 text-sm">View Results</button>
+                <button onclick="startMissedRound()" class="btn-soft rounded-xl px-4 py-2.5 text-sm">Practice Missed</button>
+                <button onclick="restartQuiz()" class="btn-soft rounded-xl px-4 py-2.5 text-sm">Restart</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="results-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 p-4">
+        <div class="w-full max-w-2xl rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+            <p class="text-[11px] uppercase tracking-[0.14em] text-teal-400 font-bold">Results</p>
+            <h3 class="mt-2 text-2xl font-extrabold text-slate-100">How You Did</h3>
+            <p id="results-summary" class="mt-2 text-sm text-slate-400"></p>
+            <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="rounded-xl border border-emerald-700/50 bg-emerald-950/20 p-3">
+                    <p class="text-sm font-bold text-emerald-300">Correct</p>
+                    <ul id="correct-list" class="mt-2 text-sm text-emerald-100 space-y-1"></ul>
+                </div>
+                <div class="rounded-xl border border-rose-700/50 bg-rose-950/20 p-3">
+                    <p class="text-sm font-bold text-rose-300">Incorrect</p>
+                    <ul id="incorrect-list" class="mt-2 text-sm text-rose-100 space-y-1"></ul>
+                </div>
+            </div>
+            <div class="mt-5 flex flex-col sm:flex-row gap-3">
+                <button onclick="startMissedRound()" class="btn-soft rounded-xl px-4 py-2.5 text-sm">Practice Missed</button>
+                <button onclick="restartQuiz()" class="btn-primary rounded-xl px-4 py-2.5 text-sm">Restart</button>
+                <button onclick="closeResultsModal()" class="btn-soft rounded-xl px-4 py-2.5 text-sm">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- DATA ---
         // Manually mapped from your provided list.
         // NOTE: Google Drive 'view' links have been auto-converted to 'preview' in the code logic below.
-        const quizData = [
+        const fullQuizData = [
             { genre: "Symphony", title: "Symphony 3", composer: "Beethoven", characteristics: "Multi-movement for orchestra; typically 25 mins - 1 hour with 4 movements (fast, slow, minuet, fast) using different musical themes in the same keys.", context: "Not provided", link: "https://drive.google.com/file/d/1mxU0oWiN2i_LotAQuYzVVmzRwJl3HTwX/view?usp=drive_link" },
             { genre: "Symphony", title: "Symphony 5", composer: "Beethoven", characteristics: "Multi-movement for orchestra; typically 25 mins - 1 hour with 4 movements (fast, slow, minuet, fast) using different musical themes in the same keys.", context: "Not provided", link: "https://drive.google.com/file/d/1xvGRhOuSYvKW0HdsdiA9xAVf_D52Rnj9/view?usp=drive_link" },
-            { genre: "Trumpet Reformation", title: "Trumpet Concerto in E flat", composer: "Haydn", characteristics: "Features a remodeled trumpet that gained valves; famously advanced by maker Anton Weidinger.", context: "Not provided", link: "https://drive.google.com/file/d/1Iy1JPVB1CVBQlLTkg9U2lczQtY4a7jCn/view?usp=drive_link" },
+            { genre: "Trumpet Concerto", title: "Trumpet Concerto in E flat", composer: "Haydn", characteristics: "Features a remodeled trumpet that gained valves; famously advanced by maker Anton Weidinger.", context: "Not provided", link: "https://drive.google.com/file/d/1Iy1JPVB1CVBQlLTkg9U2lczQtY4a7jCn/view?usp=drive_link" },
             { genre: "Serenade", title: "A Little Night Music", composer: "Mozart", characteristics: "Light and airy multi-movement piece for a 4-string ensemble or small orchestra, intended for outdoor evening entertainment.", context: "Not provided", link: "https://drive.google.com/file/d/1m3gA3TTEia-I0sYf82ez1oBmOU4bguhw/view?usp=drive_link" },
             { genre: "Theme and Variation (form)", title: "Twinkle twinkle", composer: "Mozart", characteristics: "A form where an individual composer demonstrates creativity by taking popular music and changing the melodic lines.", context: "Not provided", link: "https://drive.google.com/file/d/1UGUGyma998fL_wWQBVpeEUiIXaX9d3B7/view?usp=drive_link" },
             { genre: "String Quartet", title: "Emperor Quartet", composer: "Haydn", characteristics: "Chamber/salon music for small, intimate spaces; features four movements unified by key with one player per part and no conductor.", context: "Not provided", link: "https://drive.google.com/file/d/1kBTbqz2a4dpmXlcEvPCgqY5IxopOYdl3/view?usp=drive_link" },
@@ -251,6 +290,9 @@
         let lastUserGuess = "";
         let correctCount = 0;
         let incorrectCount = 0;
+        let questionResults = [];
+        let activeQuizData = [];
+        let roundMode = 'full';
 
         // Shuffle Array
         function shuffle(array) {
@@ -278,12 +320,18 @@
         }
 
         function updateProgress(index) {
-            const total = quizData.length || 1;
+            const total = activeQuizData.length || 1;
             const current = index + 1;
             const percent = Math.min(100, Math.round((current / total) * 100));
             const fill = document.getElementById('progress-fill');
 
             if (fill) fill.style.width = `${percent}%`;
+        }
+
+        function updateRoundBadge() {
+            const badge = document.getElementById('mode-badge');
+            if (!badge) return;
+            badge.innerText = `MODE: ${roundMode === 'missed' ? 'Missed Practice' : 'Full Quiz'}`;
         }
 
         function normalizeText(value) {
@@ -367,10 +415,54 @@
 
         // --- APP LOGIC ---
         function initApp() {
-            shuffle(quizData);
-            document.getElementById('total-count').innerText = quizData.length;
+            startFullRound();
+        }
+
+        function startFullRound() {
+            roundMode = 'full';
+            activeQuizData = [...fullQuizData];
+            shuffle(activeQuizData);
+            correctCount = 0;
+            incorrectCount = 0;
+            questionResults = Array.from({ length: activeQuizData.length }, () => null);
+            hideEndQuizModal();
+            closeResultsModal();
+            updateRoundBadge();
+            document.getElementById('total-count').innerText = activeQuizData.length;
             loadQuestion(0);
             updateScoreboard();
+        }
+
+        function getMissedItems() {
+            const missedItems = [];
+            questionResults.forEach((result, index) => {
+                if (!result || result.isCorrect) return;
+                missedItems.push(activeQuizData[index]);
+            });
+            return missedItems;
+        }
+
+        function startMissedRound() {
+            hideEndQuizModal();
+            closeResultsModal();
+
+            const missedItems = getMissedItems();
+            if (missedItems.length === 0) {
+                showToast('No missed questions to practice. Great job.');
+                return;
+            }
+
+            roundMode = 'missed';
+            activeQuizData = [...missedItems];
+            shuffle(activeQuizData);
+            correctCount = 0;
+            incorrectCount = 0;
+            questionResults = Array.from({ length: activeQuizData.length }, () => null);
+            updateRoundBadge();
+            document.getElementById('total-count').innerText = activeQuizData.length;
+            loadQuestion(0);
+            updateScoreboard();
+            showToast(`Practice Missed started: ${activeQuizData.length} track${activeQuizData.length === 1 ? '' : 's'}.`);
         }
 
         function loadQuestion(index) {
@@ -382,17 +474,28 @@
             document.getElementById('current-count').innerText = index + 1;
             document.getElementById('user-guess').value = '';
             document.getElementById('user-guess').disabled = false;
+            document.getElementById('submit-btn').disabled = false;
+            document.getElementById('submit-btn').classList.remove('opacity-60', 'cursor-not-allowed');
             document.getElementById('user-guess').focus();
             document.getElementById('feedback-panel').classList.add('hidden');
             document.getElementById('feedback-panel').classList.remove('flex');
             updateProgress(index);
             
             renderMedia();
+            const savedResult = questionResults[index];
+            if (savedResult) {
+                renderAnswerFeedback(savedResult, activeQuizData[index]);
+                document.getElementById('user-guess').value = savedResult.guessRaw;
+                document.getElementById('user-guess').disabled = true;
+                document.getElementById('submit-btn').disabled = true;
+                document.getElementById('submit-btn').classList.add('opacity-60', 'cursor-not-allowed');
+                answered = true;
+            }
             initIcons();
         }
 
         function renderMedia() {
-            const item = quizData[currentIndex];
+            const item = activeQuizData[currentIndex];
             const container = document.getElementById('media-container');
             const linkBtn = document.getElementById('backup-btn');
             
@@ -427,22 +530,18 @@
             const guessInput = document.getElementById('user-guess');
             const userGuessRaw = guessInput.value.trim();
             const userGuess = normalizeText(userGuessRaw);
-            const currentItem = quizData[currentIndex];
+            const currentItem = activeQuizData[currentIndex];
             const genreCandidates = getGenreCandidates(currentItem.genre);
             
             if (!userGuess) return;
             
             answered = true;
             guessInput.disabled = true;
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('submit-btn').classList.add('opacity-60', 'cursor-not-allowed');
 
             // Supports slash-based alternatives and minor misspellings.
             const isCorrect = genreCandidates.some((candidate) => isCloseMatch(userGuess, candidate));
-
-            // Populate Info
-            document.getElementById('info-title').innerText = currentItem.genre;
-            document.getElementById('info-composer').innerText = currentItem.title;
-            document.getElementById('info-context').innerText = currentItem.composer;
-            document.getElementById('info-characteristics').innerText = currentItem.characteristics;
 
             // Update counters
             if (isCorrect) {
@@ -450,11 +549,19 @@
             } else {
                 incorrectCount += 1;
             }
+            questionResults[currentIndex] = {
+                isCorrect,
+                guessRaw: userGuessRaw
+            };
             updateScoreboard();
+            renderAnswerFeedback(questionResults[currentIndex], currentItem, true);
+            
+            initIcons();
+        }
 
-            // Render Banner
+        function renderAnswerFeedback(result, item, shouldCelebrate = false) {
             const banner = document.getElementById('result-banner');
-            if (isCorrect) {
+            if (result.isCorrect) {
                 banner.className = 'p-4 rounded-xl flex items-center gap-3 border border-emerald-700/50 bg-emerald-900/30';
                 banner.innerHTML = `
                     <div class="bg-emerald-600 p-2 rounded-full text-white"><i data-lucide="check" class="w-6 h-6"></i></div>
@@ -462,12 +569,11 @@
                         <h3 class="text-emerald-300 font-bold text-lg">Correct Answer!</h3>
                         <div class="mt-2 inline-flex flex-wrap items-center gap-2 text-sm">
                             <span class="rounded-md border border-emerald-500/60 bg-emerald-950/40 px-2.5 py-1 text-emerald-100">
-                                Genre: <strong>${currentItem.genre}</strong>
+                                Genre: <strong>${item.genre}</strong>
                             </span>
                         </div>
                     </div>
                 `;
-                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#10b981', '#34d399', '#6ee7b7'] });
             } else {
                 banner.className = 'p-4 rounded-xl flex items-center gap-3 border border-rose-700/50 bg-rose-900/30';
                 banner.innerHTML = `
@@ -476,22 +582,28 @@
                         <h3 class="text-rose-300 font-bold text-lg">Not quite right.</h3>
                         <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
                             <span class="rounded-md border border-rose-500/60 bg-rose-950/50 px-2.5 py-1 text-rose-100">
-                                Your guess: <strong>"${guessInput.value}"</strong>
+                                Your guess: <strong>"${result.guessRaw}"</strong>
                             </span>
                             <span class="rounded-md border border-emerald-500/60 bg-emerald-950/40 px-2.5 py-1 text-emerald-100">
-                                Correct: <strong>${currentItem.genre}</strong>
+                                Correct: <strong>${item.genre}</strong>
                             </span>
                         </div>
                     </div>
                 `;
             }
 
-            // Show Feedback Panel
+            document.getElementById('info-title').innerText = item.genre;
+            document.getElementById('info-composer').innerText = item.title;
+            document.getElementById('info-context').innerText = item.composer;
+            document.getElementById('info-characteristics').innerText = item.characteristics;
+
             const panel = document.getElementById('feedback-panel');
             panel.classList.remove('hidden');
             panel.classList.add('flex');
-            
-            initIcons();
+
+            if (result.isCorrect && shouldCelebrate) {
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#10b981', '#34d399', '#6ee7b7'] });
+            }
         }
 
         function prevQuestion() {
@@ -501,12 +613,75 @@
         }
 
         function nextQuestion() {
-            if (currentIndex < quizData.length - 1) {
+            if (currentIndex < activeQuizData.length - 1) {
                 loadQuestion(currentIndex + 1);
             } else {
-                showToast("End of Playlist! Restarting...");
-                setTimeout(() => initApp(), 2000);
+                showEndQuizModal();
             }
+        }
+
+        function showEndQuizModal() {
+            const modal = document.getElementById('end-quiz-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function hideEndQuizModal() {
+            const modal = document.getElementById('end-quiz-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function showResultsModal() {
+            const modal = document.getElementById('results-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeResultsModal() {
+            const modal = document.getElementById('results-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function showResultsSummary() {
+            hideEndQuizModal();
+            const totalAnswered = correctCount + incorrectCount;
+            const unanswered = activeQuizData.length - totalAnswered;
+            const accuracy = totalAnswered === 0 ? 0 : Math.round((correctCount / totalAnswered) * 100);
+            const correctItems = [];
+            const incorrectItems = [];
+
+            questionResults.forEach((result, index) => {
+                if (!result) return;
+                const item = activeQuizData[index];
+                const label = `${index + 1}. ${item.title} (${item.genre})`;
+                if (result.isCorrect) {
+                    correctItems.push(label);
+                } else {
+                    incorrectItems.push(`${label} - your guess: "${result.guessRaw}"`);
+                }
+            });
+
+            document.getElementById('results-summary').innerText =
+                `${correctCount} correct, ${incorrectCount} incorrect, ${accuracy}% accuracy. ${unanswered} unanswered.`;
+
+            document.getElementById('correct-list').innerHTML = correctItems.length
+                ? correctItems.map((line) => `<li>${line}</li>`).join('')
+                : '<li>None yet.</li>';
+
+            document.getElementById('incorrect-list').innerHTML = incorrectItems.length
+                ? incorrectItems.map((line) => `<li>${line}</li>`).join('')
+                : '<li>None.</li>';
+
+            showResultsModal();
+        }
+
+        function restartQuiz() {
+            hideEndQuizModal();
+            closeResultsModal();
+            initApp();
+            showToast('Quiz restarted. Scores reset.');
         }
 
         function showToast(msg) {
