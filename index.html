@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Civ Music Guesser – Music History Listening Lab</title>
+    <title>Civ Music Guesser – Units 5-6</title>
     <meta name="description" content="Interactive music history listening lab. Guess the genre of each piece, then reveal composer, context, and key characteristics.">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
@@ -263,7 +263,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div>
                             <p class="text-sm font-bold text-sky-300">Leaderboard</p>
-                            <p class="text-xs text-sky-100/80">Ranked by percentage correct only - answers all questions to submit</p>
+                            <p class="text-xs text-sky-100/80">Ranked by percentage correct only - answer all questions to submit.</p>
                         </div>
                         <button onclick="refreshLeaderboard(true)" class="btn-soft rounded-xl px-3 py-2 text-xs">Refresh</button>
                     </div>
@@ -734,7 +734,7 @@
                 return;
             }
             if (hasSubmittedCurrentRound) {
-                showToast('This run is already submitted.');
+                showToast('This score is already submitted.');
                 return;
             }
             if (!LEADERBOARD_URL.trim()) {
