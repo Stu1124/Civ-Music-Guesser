@@ -108,3 +108,65 @@ Each valid `tracks` row is normalized to:
 
 1. Open `index.html` in a browser.
 2. Ensure internet access for external assets and remote sheet loading.
+
+## Live leaderboard setup (shared across users)
+
+The leaderboard UI is built into `index.html` and uses one endpoint for:
+
+- `GET` -> fetch leaderboard entries
+- `POST` -> submit a new entry
+
+### 1. Configure endpoint in `index.html`
+
+Set:
+
+- `LEADERBOARD_URL` to your deployed web app URL
+
+### 2. Deploy Google Apps Script backend
+
+Use [`leaderboard.gs`](/Users/aristusachdev/Documents/Desktop - Aristu’s MacBook Air/coding/Civ Music Guesser/leaderboard.gs) as your script code:
+
+1. Create a Google Sheet for leaderboard data.
+2. Open **Extensions -> Apps Script**.
+3. Paste the contents of `leaderboard.gs`.
+4. Save, then click **Deploy -> New deployment -> Web app**.
+5. Set access to **Anyone** (or your school domain users).
+6. Copy the Web App URL and paste into `LEADERBOARD_URL` in `index.html`.
+
+### 3. Expected payloads
+
+`POST` request body:
+
+```json
+{
+  "nickname": "Aristu",
+  "accuracy": 86,
+  "totalQuestions": 14,
+  "createdAt": "2026-02-24T20:10:00.000Z"
+}
+```
+
+Name rule: submissions must include a name (2-24 chars).
+
+Moderation rule: the script writes a `status` column with default `approved`.
+Set a row's `status` to `denied` in the sheet to hide it from the leaderboard.
+
+`GET` response can be either:
+
+```json
+[
+  { "nickname": "Aristu", "accuracy": 86, "totalQuestions": 14, "createdAt": "2026-02-24T20:10:00.000Z" }
+]
+```
+
+or:
+
+```json
+{
+  "entries": [
+    { "nickname": "Aristu", "accuracy": 86, "totalQuestions": 14, "createdAt": "2026-02-24T20:10:00.000Z" }
+  ]
+}
+```
+
+Ranking is done client-side by `accuracy` only (descending), as requested.
