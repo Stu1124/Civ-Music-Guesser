@@ -232,10 +232,16 @@
         <span id="toast-msg">Notification</span>
     </div>
 
-    <aside class="fixed bottom-4 right-4 z-40 w-56 sm:w-64 rounded-xl border border-slate-700 bg-slate-900/95 backdrop-blur p-3 shadow-2xl">
+    <div id="mini-leaderboard-launcher" class="fixed bottom-4 right-4 z-40">
+        <button onclick="setMiniLeaderboardOpen(true)" class="rounded-full border border-sky-700/70 bg-slate-900/95 px-4 py-2 text-xs font-bold uppercase tracking-wider text-sky-300 shadow-2xl">
+            Leaderboard
+        </button>
+    </div>
+
+    <aside id="mini-leaderboard-panel" class="fixed bottom-4 right-4 z-40 w-56 sm:w-64 rounded-xl border border-slate-700 bg-slate-900/95 backdrop-blur p-3 shadow-2xl hidden">
         <div class="flex items-center justify-between">
             <p class="text-xs uppercase tracking-wider text-sky-300 font-bold">Top 5</p>
-            <button onclick="refreshLeaderboard(true)" class="text-[10px] text-slate-400 hover:text-slate-200">Refresh</button>
+            <button onclick="setMiniLeaderboardOpen(false)" class="text-[10px] text-slate-400 hover:text-slate-200">Collapse</button>
         </div>
         <ul id="mini-leaderboard-list" class="mt-2 space-y-1 text-xs text-slate-100"></ul>
     </aside>
@@ -257,7 +263,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div>
                             <p class="text-sm font-bold text-sky-300">Leaderboard</p>
-                            <p class="text-xs text-sky-100/80">Ranked by percentage correct only.</p>
+                            <p class="text-xs text-sky-100/80">Ranked by percentage correct only - answers all questions to submit</p>
                         </div>
                         <button onclick="refreshLeaderboard(true)" class="btn-soft rounded-xl px-3 py-2 text-xs">Refresh</button>
                     </div>
@@ -340,6 +346,7 @@
         let roundMode = 'full';
         let loadedQuizData = [...fallbackQuizData];
         let hasSubmittedCurrentRound = false;
+        let isMiniLeaderboardOpen = false;
 
         // Shuffle Array
         function shuffle(array) {
@@ -638,6 +645,20 @@
                     <span class="text-slate-300 font-semibold">${entry.accuracy}%</span>
                 </li>
             `).join('');
+        }
+
+        function setMiniLeaderboardOpen(isOpen) {
+            isMiniLeaderboardOpen = !!isOpen;
+            const launcher = document.getElementById('mini-leaderboard-launcher');
+            const panel = document.getElementById('mini-leaderboard-panel');
+            if (!launcher || !panel) return;
+
+            launcher.classList.toggle('hidden', isMiniLeaderboardOpen);
+            panel.classList.toggle('hidden', !isMiniLeaderboardOpen);
+
+            if (isMiniLeaderboardOpen) {
+                refreshLeaderboard(true);
+            }
         }
 
         function getLeaderboardEntriesFromResponse(payload) {
