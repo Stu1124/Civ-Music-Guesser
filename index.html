@@ -181,6 +181,10 @@
                             <span class="text-sky-300/90 font-semibold">Accuracy</span>
                             <span id="accuracy" class="font-bold text-sky-300">0%</span>
                         </span>
+                        <span id="streak-badge" class="hidden inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-orange-700/50 bg-orange-900/25 text-orange-200">
+                            <span class="text-orange-300/90 font-semibold">🔥</span>
+                            <span id="streak-count" class="font-bold text-orange-300">0</span>
+                        </span>
                     </div>
                     <span class="text-slate-500 font-medium">Progress</span>
                 </div>
@@ -198,6 +202,15 @@
                 <button id="submit-btn" onclick="checkAnswer()" class="btn-primary px-7 py-3 rounded-xl text-base">
                     Check
                 </button>
+            </div>
+            <div id="hint-area" class="flex flex-col gap-2">
+                <button id="hint-btn" onclick="showHint()" class="btn-soft px-4 py-2 rounded-xl text-sm self-start">
+                    💡 Show Hint
+                </button>
+                <div id="hint-text" class="hidden bg-slate-800/60 border border-yellow-700/40 rounded-xl px-4 py-3 text-sm text-yellow-100/90">
+                    <p class="text-[10px] uppercase tracking-wider text-yellow-500/80 mb-1">Hint: Key Characteristics</p>
+                    <p id="hint-content" class="leading-relaxed"></p>
+                </div>
             </div>
         </section>
 
@@ -348,6 +361,9 @@
         let lastUserGuess = "";
         let correctCount = 0;
         let incorrectCount = 0;
+        let streakCount = 0;
+        let bestStreak = 0;
+        let hintShown = false;
         let questionResults = [];
         let activeQuizData = [];
         let roundMode = 'full';
@@ -967,6 +983,34 @@
             return Array.from(variants);
         }
 
+        function updateStreak() {
+            const badge = document.getElementById('streak-badge');
+            const countEl = document.getElementById('streak-count');
+            if (!badge || !countEl) return;
+            if (streakCount >= 2) {
+                countEl.innerText = streakCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function showHint() {
+            if (hintShown || answered) return;
+            hintShown = true;
+            const currentItem = activeQuizData[currentIndex];
+            const hintContent = document.getElementById('hint-content');
+            const hintText = document.getElementById('hint-text');
+            const hintBtn = document.getElementById('hint-btn');
+            if (hintContent) hintContent.innerText = currentItem.characteristics;
+            if (hintText) hintText.classList.remove('hidden');
+            if (hintBtn) {
+                hintBtn.disabled = true;
+                hintBtn.classList.add('opacity-60', 'cursor-not-allowed');
+                hintBtn.innerText = '💡 Hint Shown';
+            }
+        }
+
         // --- APP LOGIC ---
         function initApp() {
             startFullRound();
@@ -978,6 +1022,8 @@
             shuffle(activeQuizData);
             correctCount = 0;
             incorrectCount = 0;
+            streakCount = 0;
+            bestStreak = 0;
             hasSubmittedCurrentRound = false;
             questionResults = Array.from({ length: activeQuizData.length }, () => null);
             hideEndQuizModal();
@@ -986,6 +1032,7 @@
             document.getElementById('total-count').innerText = activeQuizData.length;
             loadQuestion(0);
             updateScoreboard();
+            updateStreak();
         }
 
         function getMissedItems() {
@@ -1012,20 +1059,23 @@
             shuffle(activeQuizData);
             correctCount = 0;
             incorrectCount = 0;
+            streakCount = 0;
             hasSubmittedCurrentRound = false;
             questionResults = Array.from({ length: activeQuizData.length }, () => null);
             updateRoundBadge();
             document.getElementById('total-count').innerText = activeQuizData.length;
             loadQuestion(0);
             updateScoreboard();
+            updateStreak();
             showToast(`Practice Missed started: ${activeQuizData.length} track${activeQuizData.length === 1 ? '' : 's'}.`);
         }
 
         function loadQuestion(index) {
             currentIndex = index;
             answered = false;
+            hintShown = false;
             lastUserGuess = "";
-            
+
             // UI Reset
             document.getElementById('current-count').innerText = index + 1;
             document.getElementById('user-guess').value = '';
@@ -1035,8 +1085,19 @@
             document.getElementById('user-guess').focus();
             document.getElementById('feedback-panel').classList.add('hidden');
             document.getElementById('feedback-panel').classList.remove('flex');
+
+            // Reset hint UI
+            const hintBtn = document.getElementById('hint-btn');
+            const hintText = document.getElementById('hint-text');
+            if (hintBtn) {
+                hintBtn.disabled = false;
+                hintBtn.classList.remove('hidden', 'opacity-60', 'cursor-not-allowed');
+                hintBtn.innerText = '💡 Show Hint';
+            }
+            if (hintText) hintText.classList.add('hidden');
+
             updateProgress(index);
-            
+
             renderMedia();
             const savedResult = questionResults[index];
             if (savedResult) {
@@ -1045,6 +1106,7 @@
                 document.getElementById('user-guess').disabled = true;
                 document.getElementById('submit-btn').disabled = true;
                 document.getElementById('submit-btn').classList.add('opacity-60', 'cursor-not-allowed');
+                if (hintBtn) hintBtn.classList.add('hidden');
                 answered = true;
             }
             initIcons();
@@ -1099,17 +1161,28 @@
             // Supports slash-based alternatives and minor misspellings.
             const isCorrect = genreCandidates.some((candidate) => isCloseMatch(userGuess, candidate));
 
-            // Update counters
+            // Update counters and streak
             if (isCorrect) {
                 correctCount += 1;
+                streakCount += 1;
+                if (streakCount > bestStreak) bestStreak = streakCount;
             } else {
                 incorrectCount += 1;
+                streakCount = 0;
             }
             questionResults[currentIndex] = {
                 isCorrect,
                 guessRaw: userGuessRaw
             };
+
+            // Hide hint when answer is submitted
+            const hintBtn = document.getElementById('hint-btn');
+            const hintTextEl = document.getElementById('hint-text');
+            if (hintBtn) hintBtn.classList.add('hidden');
+            if (hintTextEl) hintTextEl.classList.add('hidden');
+
             updateScoreboard();
+            updateStreak();
             renderAnswerFeedback(questionResults[currentIndex], currentItem, true);
             
             initIcons();
@@ -1303,8 +1376,14 @@
                 const typingInGuess = activeEl && activeEl.id === 'user-guess';
 
                 if (typingInGuess) return;
+
+                const endModal = document.getElementById('end-quiz-modal');
+                const resultsModal = document.getElementById('results-modal');
+                const modalOpen = !endModal.classList.contains('hidden') || !resultsModal.classList.contains('hidden');
+
                 if (e.key === 'ArrowRight') nextQuestion();
                 if (e.key === 'ArrowLeft') prevQuestion();
+                if (e.key === 'Enter' && answered && !modalOpen) nextQuestion();
             });
 
             await bootstrapApp();
