@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Civ Music Guesser – Unit 7</title>
+    <title>Civ Music Guesser – Unit 8</title>
     <meta name="description" content="Interactive music history listening lab. Guess the genre of each piece, then reveal composer, context, and key characteristics.">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7185308952264759" crossorigin="anonymous"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -196,18 +196,6 @@
                         Content: Fallback
                     </span>
                 </div>
-                <div class="flex items-center gap-2 self-start sm:self-auto">
-                    <a id="notebook-link" href="https://notebooklm.google.com/notebook/ff074ee3-5859-432e-ab5c-a068cbb613bd" target="_blank" rel="noopener noreferrer" class="btn-notebook px-3 py-1.5 rounded-lg text-xs sm:text-sm inline-flex items-center gap-1.5">
-                        <svg aria-hidden="true" viewBox="0 0 24 24" class="w-3.5 h-3.5 text-cyan-300" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="4" y="3" width="16" height="18" rx="2"></rect>
-                            <path d="M8 3v18"></path>
-                            <path d="M11 7h6"></path>
-                            <path d="M11 11h6"></path>
-                            <path d="M11 15h4"></path>
-                        </svg>
-                        NotebookLM
-                    </a>
-                </div>
             </div>
 
             <div id="media-container" class="w-full min-h-[230px] sm:min-h-[290px] rounded-xl border border-slate-700 overflow-hidden bg-slate-900 flex items-center justify-center">
@@ -311,7 +299,7 @@
     </div>
 
     <div id="mini-leaderboard-launcher" class="fixed bottom-4 right-4 z-40 hidden">
-        <button onclick="setMiniLeaderboardOpen(true)" class="rounded-full border border-sky-700/70 bg-slate-900/95 px-4 py-2 text-xs font-bold uppercase tracking-wider text-sky-300 shadow-2xl hover:border-sky-500 transition-colors">
+        <button onclick="setMiniLeaderboardOpen(!isMiniLeaderboardOpen)" class="rounded-full border border-sky-700/70 bg-slate-900/95 px-4 py-2 text-xs font-bold uppercase tracking-wider text-sky-300 shadow-2xl hover:border-sky-500 transition-colors">
             <i data-lucide="trophy" class="inline w-3.5 h-3.5 mr-1 -mt-0.5"></i>Leaderboard
         </button>
     </div>
@@ -810,7 +798,6 @@
             const panel = document.getElementById('mini-leaderboard-panel');
             if (!launcher || !panel) return;
 
-            launcher.classList.toggle('hidden', isMiniLeaderboardOpen);
             panel.classList.toggle('hidden', !isMiniLeaderboardOpen);
 
             if (isMiniLeaderboardOpen) {
@@ -1539,7 +1526,7 @@
                         ),
                         React.createElement('div', null,
                             React.createElement('h1', { className: 'text-xl font-black text-slate-900 tracking-tight', style: { fontFamily: 'Georgia, serif' } }, 'Geo-Historical Matrix'),
-                            React.createElement('p', { className: 'text-xs text-slate-500 font-bold uppercase tracking-widest' }, 'Unit 7 • 19th Century Deep Dive')
+                            React.createElement('p', { className: 'text-xs text-slate-500 font-bold uppercase tracking-widest' }, 'Unit 8')
                         )
                     ),
                     React.createElement('div', { className: 'flex items-center gap-3 flex-wrap' },
