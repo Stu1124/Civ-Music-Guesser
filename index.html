@@ -5,396 +5,1327 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Civ Music Guesser – Unit 8</title>
     <meta name="description" content="Interactive music history listening lab. Guess the genre of each piece, then reveal composer, context, and key characteristics.">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7185308952264759" crossorigin="anonymous"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide-react@0.263.1/dist/umd/lucide-react.min.js"></script>
+    <script src="https://unpkg.com/lucide@1.11.0/dist/umd/lucide.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 
         :root {
-            --bg: #1f2937;
-            --surface: #111827;
-            --surface-soft: #0f172a;
-            --text: #e5e7eb;
-            --muted: #94a3b8;
-            --line: #334155;
-            --brand: #0f766e;
-            --brand-dark: #115e59;
-            --accent: #cbd5e1;
-            --ok: #059669;
-            --bad: #dc2626;
+            --bg: #08090c;
+            --panel: #10161d;
+            --panel-raised: #151b23;
+            --panel-soft: #0c1117;
+            --field: #090d12;
+            --text: #eef2f6;
+            --muted: #a0a8b2;
+            --subtle: #6f7884;
+            --line: #27313d;
+            --line-strong: #3a4552;
+            --brand: #28b6a4;
+            --brand-dark: #169684;
+            --amber: #d2a447;
+            --ok: #46c697;
+            --bad: #e57a88;
         }
 
-        body {
-            font-family: 'Manrope', sans-serif;
-            color: var(--text);
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
             background: var(--bg);
         }
 
-        .shell {
-            width: 100%;
-            max-width: none;
+        body {
+            min-height: 100vh;
             margin: 0;
-            padding: 0;
+            color: var(--text);
+            background: var(--bg);
+            font-family: 'Manrope', sans-serif;
         }
 
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--line);
-            border-radius: 0;
-            box-shadow: 0 8px 24px rgba(2, 6, 23, 0.28);
+        button,
+        input {
+            font: inherit;
         }
 
-        .input-glow:focus {
-            border-color: #14b8a6;
-            box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.14);
+        button {
+            cursor: pointer;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+        }
+
+        .app-shell {
+            width: min(100%, 1340px);
+            margin: 0 auto;
+            padding: clamp(16px, 2.8vw, 34px);
+        }
+
+        .app-frame {
+            display: flex;
+            min-height: calc(100vh - clamp(32px, 5.6vw, 68px));
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 4px 2px 0;
+        }
+
+        .brand-block {
+            min-width: 0;
+        }
+
+        .eyebrow,
+        .kicker {
+            margin: 0;
+            color: var(--amber);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .brand-block h1 {
+            margin: 4px 0 0;
+            color: var(--text);
+            font-size: clamp(1.5rem, 3vw, 2.35rem);
+            font-weight: 800;
+            line-height: 1.05;
+        }
+
+        .status-cluster {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .status-pill,
+        .mode-badge {
+            display: inline-flex;
+            min-height: 32px;
+            align-items: center;
+            border: 1px solid var(--line-strong);
+            border-radius: 999px;
+            padding: 0 12px;
+            background: rgba(17, 24, 32, 0.86);
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .status-live {
+            border-color: rgba(57, 198, 143, 0.48);
+            color: #a9f3cf;
+        }
+
+        .status-warn {
+            border-color: rgba(211, 162, 69, 0.48);
+            color: #f0ce84;
+        }
+
+        .btn-primary,
+        .btn-soft,
+        .btn-secondary,
+        .btn-notebook,
+        .icon-button,
+        .floating-button {
+            display: inline-flex;
+            min-height: 40px;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: 8px;
+            padding: 0 14px;
+            transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
         }
 
         .btn-primary {
-            background: var(--brand);
-            color: #ffffff;
             border: 1px solid var(--brand);
-            font-weight: 700;
+            background: var(--brand);
+            color: #06110f;
+            font-weight: 800;
         }
 
-        .btn-primary:hover { background: var(--brand-dark); }
-
-        .btn-soft {
-            background: #1e293b;
-            color: #e2e8f0;
-            border: 1px solid #475569;
-            font-weight: 600;
+        .btn-primary:hover {
+            background: #26c4b0;
+            border-color: #26c4b0;
         }
 
-        .btn-soft:hover { background: #334155; }
-
-        .btn-notebook {
-            background: #0b1220;
-            color: #e2e8f0;
-            border: 1px solid #64748b;
-            font-weight: 700;
+        .btn-primary:disabled {
+            border-color: #31524d;
+            background: #22413d;
+            color: #a9c8c2;
         }
 
-        .btn-notebook:hover {
-            background: #111827;
-            border-color: #94a3b8;
+        .btn-soft,
+        .btn-secondary,
+        .btn-notebook,
+        .icon-button,
+        .floating-button {
+            border: 1px solid var(--line-strong);
+            background: rgba(21, 29, 39, 0.92);
+            color: var(--text);
+            font-weight: 750;
+        }
+
+        .btn-soft:hover,
+        .btn-secondary:hover,
+        .btn-notebook:hover,
+        .icon-button:hover,
+        .floating-button:hover {
+            border-color: #586779;
+            background: #1b2530;
+        }
+
+        .btn-notebook svg,
+        .icon-button svg,
+        .floating-button svg,
+        .btn-soft svg,
+        .btn-secondary svg,
+        .btn-primary svg {
+            width: 17px;
+            height: 17px;
+            flex: 0 0 auto;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--muted);
+        }
+
+        .btn-secondary:disabled {
+            color: #6f817e;
+            border-color: #2b3735;
+            background: transparent;
+        }
+
+        .workspace-grid {
+            display: grid;
+            flex: 1;
+            grid-template-columns: minmax(0, 1.28fr) minmax(360px, 0.72fr);
+            align-items: start;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(16, 22, 29, 0.96);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+        }
+
+        .panel {
+            background: transparent;
+        }
+
+        .media-panel {
+            display: flex;
+            min-height: 600px;
+            flex-direction: column;
+            border-right: 1px solid var(--line);
+            overflow: hidden;
+        }
+
+        .quiz-panel {
+            position: sticky;
+            top: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            min-height: 600px;
+            padding: clamp(18px, 2.2vw, 24px);
+            background: rgba(12, 17, 23, 0.42);
+        }
+
+        .panel-header,
+        .question-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .panel-header {
+            border-bottom: 1px solid var(--line);
+            padding: 18px 20px;
+            background: rgba(21, 27, 35, 0.52);
+        }
+
+        .panel-title,
+        .question-title {
+            margin: 4px 0 0;
+            color: var(--text);
+            font-weight: 800;
+            line-height: 1.08;
+        }
+
+        .panel-title {
+            font-size: clamp(1.25rem, 2vw, 1.7rem);
+        }
+
+        .question-title {
+            font-size: clamp(1.65rem, 3vw, 2.5rem);
+        }
+
+        .media-stage {
+            display: flex;
+            min-height: 470px;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.02);
+            background: #0b0d10;
+        }
+
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            color: var(--subtle);
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .loading-state svg {
+            width: 34px;
+            height: 34px;
+            color: var(--brand);
+        }
+
+        .media-iframe {
+            width: 100%;
+            height: 100%;
+            min-height: 470px;
+            border: 0;
+            background: #000;
+        }
+
+        .nav-controls {
+            display: flex;
+            flex: 0 0 auto;
+            overflow: hidden;
+            border: 1px solid var(--line-strong);
+            border-radius: 8px;
+            background: var(--panel-soft);
+        }
+
+        .icon-button {
+            width: 40px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            padding: 0;
+        }
+
+        .icon-button + .icon-button {
+            border-left: 1px solid var(--line);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            overflow: hidden;
+            border-top: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+            background: rgba(12, 17, 23, 0.35);
+        }
+
+        .stat-cell {
+            min-width: 0;
+            padding: 12px 14px;
+        }
+
+        .stat-cell + .stat-cell {
+            border-left: 1px solid var(--line);
+        }
+
+        .stat-label {
+            margin: 0;
+            color: var(--subtle);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            display: block;
+            margin-top: 6px;
+            color: var(--text);
+            font-size: 1.15rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .stat-value.ok {
+            color: var(--ok);
+        }
+
+        .stat-value.bad {
+            color: var(--bad);
+        }
+
+        .progress-block {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            color: var(--subtle);
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
 
         .thin-progress {
-            background: #334155;
-            border-radius: 9999px;
+            height: 6px;
             overflow: hidden;
-            height: 0.6rem;
+            border-radius: 999px;
+            background: #252d37;
         }
 
         .thin-progress > span {
             display: block;
             width: 0%;
             height: 100%;
-            background: linear-gradient(90deg, #14b8a6, #0f766e);
+            background: var(--brand);
             transition: width 260ms ease;
         }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .guess-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
         }
 
-        .reveal-anim { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .guess-actions {
+            display: flex;
+            gap: 8px;
+        }
 
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #3a4f6f; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #4f6990; }
+        .guess-actions .btn-primary,
+        .guess-actions .btn-secondary {
+            min-width: 78px;
+        }
 
-        /* Tab system */
-        #top-tab-bar {
+        .answer-input,
+        .compact-input {
+            width: 100%;
+            border: 1px solid var(--line-strong);
+            border-radius: 8px;
+            outline: none;
+            background: var(--field);
+            color: var(--text);
+            transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+        }
+
+        .answer-input {
+            min-height: 48px;
+            padding: 0 14px;
+            font-size: 1rem;
+            font-weight: 650;
+        }
+
+        .compact-input {
+            min-height: 40px;
+            padding: 0 12px;
+            font-size: 0.9rem;
+        }
+
+        .answer-input::placeholder,
+        .compact-input::placeholder {
+            color: #647284;
+        }
+
+        .answer-input:focus,
+        .compact-input:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 4px rgba(26, 169, 152, 0.14);
+            background: #081016;
+        }
+
+        .answer-input:disabled,
+        .compact-input:disabled {
+            border-color: var(--line);
+            background: rgba(9, 13, 18, 0.74);
+            color: var(--text);
+        }
+
+        .feedback-panel {
+            border-top: 1px solid var(--line);
+            padding-top: 18px;
+        }
+
+        .answer-actions {
             display: flex;
             align-items: center;
-            background: #0f172a;
-            border-bottom: 1px solid #1e293b;
-            padding: 0 1rem;
-            gap: 0;
-            flex-shrink: 0;
-            z-index: 60;
-            position: relative;
+            justify-content: flex-end;
+            gap: 10px;
         }
-        .tab-btn {
+
+        .result-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 14px;
+            background: rgba(12, 17, 23, 0.74);
+        }
+
+        .result-correct {
+            border-color: rgba(70, 198, 151, 0.32);
+            background: rgba(22, 72, 58, 0.24);
+        }
+
+        .result-wrong {
+            border-color: rgba(229, 122, 136, 0.34);
+            background: rgba(82, 33, 41, 0.24);
+        }
+
+        .result-icon {
             display: inline-flex;
+            width: 34px;
+            height: 34px;
+            flex: 0 0 auto;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.65rem 1.25rem;
-            font-size: 0.8rem;
+            justify-content: center;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .result-icon svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .result-banner h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .result-correct h3 {
+            color: var(--ok);
+        }
+
+        .result-wrong h3 {
+            color: var(--bad);
+        }
+
+        .result-banner p {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+
+        .result-banner strong {
+            color: var(--text);
+        }
+
+        .answer-details {
+            border-top: 1px solid var(--line);
+            padding-top: 14px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .detail-item {
+            min-width: 0;
+        }
+
+        .detail-label {
+            margin: 0;
+            color: var(--subtle);
+            font-size: 0.67rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        .detail-value {
+            margin: 5px 0 0;
+            color: var(--text);
+            font-weight: 750;
+            line-height: 1.35;
+        }
+
+        .detail-copy {
+            margin: 12px 0 0;
+            border-top: 1px solid var(--line);
+            padding-top: 12px;
+            color: #d7dee7;
+            font-size: 0.94rem;
+            line-height: 1.55;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: calc(100vw - 32px);
+            transform: translate(-50%, 20px);
+            border: 1px solid var(--line-strong);
+            border-radius: 999px;
+            background: rgba(13, 18, 25, 0.96);
+            color: var(--text);
+            padding: 11px 16px;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.36);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 200ms ease, transform 200ms ease;
+        }
+
+        .toast:not(.opacity-0) {
+            transform: translate(-50%, 0);
+        }
+
+        .toast svg {
+            width: 18px;
+            height: 18px;
+            color: var(--brand);
+        }
+
+        .leaderboard-launcher {
+            position: static;
+            z-index: auto;
+        }
+
+        .floating-button {
+            min-height: 40px;
+            box-shadow: none;
+        }
+
+        .floating-label {
+            display: inline;
+        }
+
+        .mini-panel {
+            position: fixed;
+            top: 96px;
+            right: clamp(16px, 2.8vw, 34px);
+            z-index: 40;
+            width: min(300px, calc(100vw - 32px));
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(13, 18, 25, 0.97);
+            padding: 14px;
+            box-shadow: 0 22px 70px rgba(0, 0, 0, 0.42);
+            backdrop-filter: blur(14px);
+        }
+
+        .mini-panel-head,
+        .modal-head,
+        .leaderboard-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .section-title {
+            margin: 0;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
+        .link-button {
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 800;
+            padding: 0;
+        }
+
+        .link-button:hover {
+            color: var(--text);
+        }
+
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 12px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .leaderboard-row,
+        .mini-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel-soft);
+        }
+
+        .leaderboard-row {
+            padding: 10px 12px;
+        }
+
+        .mini-row {
+            padding: 8px 10px;
+            font-size: 0.84rem;
+        }
+
+        .mini-row.rank-1 { border-color: rgba(255, 215, 0, 0.35); background: rgba(255, 215, 0, 0.06); }
+        .mini-row.rank-2 { border-color: rgba(192, 192, 192, 0.3); background: rgba(192, 192, 192, 0.05); }
+        .mini-row.rank-3 { border-color: rgba(205, 127, 50, 0.3); background: rgba(205, 127, 50, 0.05); }
+
+        .leaderboard-row.rank-1 { border-color: rgba(255, 215, 0, 0.35); background: rgba(255, 215, 0, 0.06); }
+        .leaderboard-row.rank-2 { border-color: rgba(192, 192, 192, 0.3); background: rgba(192, 192, 192, 0.05); }
+        .leaderboard-row.rank-3 { border-color: rgba(205, 127, 50, 0.3); background: rgba(205, 127, 50, 0.05); }
+
+        .rank {
+            color: var(--amber);
+            font-weight: 800;
+        }
+
+        .rank-medal {
+            font-size: 1.05em;
+            margin-right: 2px;
+        }
+
+        .view-all-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 10px;
+            width: 100%;
+            border: 1px dashed var(--line-strong);
+            border-radius: 8px;
+            padding: 8px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 800;
+            transition: color 160ms ease, border-color 160ms ease;
+        }
+
+        .view-all-btn:hover {
+            color: var(--text);
+            border-color: var(--brand);
+        }
+
+        .full-lb-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(5, 8, 12, 0.82);
+            padding: 18px;
+            backdrop-filter: blur(12px);
+        }
+
+        .full-lb-card {
+            width: min(100%, 680px);
+            max-height: min(88vh, 860px);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--line-strong);
+            border-radius: 12px;
+            background: var(--panel);
+            box-shadow: 0 32px 100px rgba(0, 0, 0, 0.54);
+            overflow: hidden;
+        }
+
+        .full-lb-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 20px 22px 16px;
+            border-bottom: 1px solid var(--line);
+            flex-shrink: 0;
+        }
+
+        .full-lb-title {
+            margin: 4px 0 0;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .full-lb-body {
+            overflow-y: auto;
+            padding: 16px 22px 22px;
+            flex: 1;
+        }
+
+        .full-lb-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 6px;
+        }
+
+        .full-lb-table thead th {
+            padding: 0 10px 6px;
+            color: var(--subtle);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-align: left;
+        }
+
+        .full-lb-table thead th:last-child { text-align: right; }
+
+        .full-lb-table tbody tr {
+            border-radius: 8px;
+        }
+
+        .full-lb-table tbody td {
+            padding: 10px 10px;
+            background: var(--panel-soft);
+            border-top: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+            font-size: 0.9rem;
+        }
+
+        .full-lb-table tbody td:first-child {
+            border-left: 1px solid var(--line);
+            border-radius: 8px 0 0 8px;
+            padding-left: 14px;
+        }
+
+        .full-lb-table tbody td:last-child {
+            border-right: 1px solid var(--line);
+            border-radius: 0 8px 8px 0;
+            text-align: right;
+            padding-right: 14px;
+        }
+
+        .full-lb-table tbody tr.rank-1 td { border-color: rgba(255, 215, 0, 0.35); background: rgba(255, 215, 0, 0.06); }
+        .full-lb-table tbody tr.rank-2 td { border-color: rgba(192, 192, 192, 0.3); background: rgba(192, 192, 192, 0.05); }
+        .full-lb-table tbody tr.rank-3 td { border-color: rgba(205, 127, 50, 0.3); background: rgba(205, 127, 50, 0.05); }
+
+        .full-lb-table tbody tr.rank-1 td:first-child,
+        .full-lb-table tbody tr.rank-2 td:first-child,
+        .full-lb-table tbody tr.rank-3 td:first-child { border-left-width: 2px; }
+
+        .lb-accuracy {
+            font-weight: 800;
+            font-size: 1rem;
+            color: var(--ok);
+        }
+
+        .lb-accuracy-low {
+            color: var(--bad);
+        }
+
+        .lb-meta {
+            color: var(--subtle);
+            font-size: 0.78rem;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .status-line {
+            min-height: 18px;
+            margin: 10px 0 0;
+            color: var(--muted);
+            font-size: 0.78rem;
             font-weight: 700;
-            letter-spacing: 0.04em;
-            color: #64748b;
-            border-bottom: 2px solid transparent;
-            transition: color 0.15s, border-color 0.15s;
-            cursor: pointer;
-            white-space: nowrap;
-            background: none;
-            border-top: none;
-            border-left: none;
-            border-right: none;
-            font-family: 'Manrope', sans-serif;
         }
-        .tab-btn:hover { color: #94a3b8; }
-        .tab-btn.active { color: #14b8a6; border-bottom-color: #14b8a6; }
-        .tab-btn .tab-dot {
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-            opacity: 0.5;
+
+        .status-ok {
+            color: var(--ok);
         }
-        .tab-btn.active .tab-dot { opacity: 1; }
 
-        .tab-panel { display: none; flex: 1; overflow: hidden; }
-        .tab-panel.active { display: flex; flex-direction: column; }
+        .status-bad {
+            color: var(--bad);
+        }
 
-        /* Give the quiz panel its dark bg */
-        #tab-quiz { background: var(--bg); }
-        /* Give the matrix panel its light bg */
-        #tab-matrix { background: #EEF2F6; }
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+            background: rgba(5, 8, 12, 0.78);
+            padding: 18px;
+            backdrop-filter: blur(10px);
+        }
 
-        /* Wrap the body as a flex column so tabs + panels fill the viewport */
-        body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .modal-card {
+            width: min(100%, 760px);
+            max-height: min(86vh, 880px);
+            overflow: auto;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            padding: clamp(18px, 2.4vw, 26px);
+            box-shadow: 0 28px 90px rgba(0, 0, 0, 0.48);
+        }
 
-        /* Make quiz main scroll within its panel */
-        #tab-quiz > main { flex: 1; overflow-y: auto; }
+        .modal-wide {
+            width: min(100%, 1060px);
+        }
 
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .modal-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 0.82fr) minmax(340px, 1.18fr);
+            gap: 18px;
+        }
+
+        .modal-title {
+            margin: 6px 0 0;
+            color: var(--text);
+            font-size: clamp(1.35rem, 2.2vw, 2rem);
+            font-weight: 800;
+            line-height: 1.12;
+        }
+
+        .modal-copy {
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .action-row,
+        .submit-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .action-row {
+            margin-top: 22px;
+        }
+
+        .leaderboard-box,
+        .results-box {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(12, 17, 23, 0.64);
+            padding: 14px;
+        }
+
+        .submit-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            margin-top: 12px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .results-list {
+            margin: 10px 0 0;
+            padding: 0;
+            list-style: none;
+            color: #dbe4ee;
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+
+        .results-list li + li {
+            margin-top: 8px;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reveal-anim {
+            animation: slideUp 220ms ease-out forwards;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #354253;
+            border-radius: 999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #465468;
+        }
+
+        @media (max-width: 980px) {
+            .app-frame {
+                min-height: auto;
+            }
+
+            .workspace-grid,
+            .modal-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .workspace-grid {
+                overflow: visible;
+            }
+
+            .quiz-panel {
+                position: static;
+                min-height: auto;
+                border-top: 1px solid var(--line);
+            }
+
+            .media-panel {
+                min-height: auto;
+                border-right: 0;
+            }
+
+            .media-stage,
+            .media-iframe {
+                min-height: 360px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                overflow-x: hidden;
+            }
+
+            .topbar,
+            .panel-header,
+            .question-row,
+            .leaderboard-head {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .status-cluster {
+                justify-content: flex-start;
+            }
+
+            .stats-grid,
+            .detail-grid,
+            .results-grid,
+            .submit-row {
+                grid-template-columns: 1fr;
+            }
+
+            .guess-form {
+                grid-template-columns: 1fr;
+            }
+
+            .guess-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .stat-cell + .stat-cell {
+                border-top: 1px solid var(--line);
+                border-left: 0;
+            }
+
+            .media-stage,
+            .media-iframe {
+                min-height: 300px;
+            }
+
+            .leaderboard-launcher {
+                right: 12px;
+                top: 12px;
+                bottom: auto;
+            }
+
+            .mini-panel {
+                right: 12px;
+                top: 92px;
+                bottom: auto;
+            }
+
+            .floating-button {
+                width: 44px;
+                padding: 0;
+            }
+
+            .floating-label {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- Tab Navigation Bar -->
-    <div id="top-tab-bar">
-        <button class="tab-btn active" onclick="switchTab('quiz')" id="tab-btn-quiz">
-            <span class="tab-dot"></span>
-            MUSIC GUESSER
-        </button>
-        <button class="tab-btn" onclick="switchTab('matrix')" id="tab-btn-matrix">
-            <span class="tab-dot"></span>
-            HISTORY MATRIX
-        </button>
-    </div>
-
-    <!-- Quiz App Panel -->
-    <div id="tab-quiz" class="tab-panel active">
-    <main class="shell" style="min-height:0">
-        <div class="card overflow-hidden min-h-screen">
-        <section class="p-3 sm:p-4 border-b border-slate-700/80">
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
-                <div class="flex items-center gap-2 flex-wrap">
-                    <h2 id="quiz-title" class="text-lg sm:text-xl font-extrabold text-slate-100">Civ Music Guesser</h2>
-                    <span id="content-status" class="text-[11px] font-semibold px-2 py-1 rounded-full border border-amber-700/50 bg-amber-900/25 text-amber-200">
-                        Content: Fallback
-                    </span>
+    <main class="app-shell">
+        <div class="app-frame">
+            <header class="topbar">
+                <div class="brand-block">
+                    <p class="eyebrow">Unit 8</p>
+                    <h1 id="quiz-title">Civ Music Guesser</h1>
                 </div>
-            </div>
-
-            <div id="media-container" class="w-full min-h-[230px] sm:min-h-[290px] rounded-xl border border-slate-700 overflow-hidden bg-slate-900 flex items-center justify-center">
-                <div class="text-slate-500 flex flex-col items-center animate-pulse">
-                    <i data-lucide="loader" class="w-10 h-10 mb-3 animate-spin text-teal-700"></i>
-                    <p class="text-sm font-medium tracking-wide">LOADING AUDIO...</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="p-4 sm:p-5 flex flex-col gap-4 border-b border-slate-700/80">
-            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                <div>
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-teal-400 font-bold">Identify The Genre</p>
-                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-100 mt-1">What genre is this piece?</h2>
-                    <p class="text-sm text-slate-500 mt-2">
-                        Submit your guess below.
-                    </p>
-                </div>
-                <div class="flex flex-wrap items-center justify-start sm:justify-end gap-2">
-                    <div class="text-xs font-semibold text-slate-300 bg-slate-800/90 px-3 py-2 rounded-full border border-slate-600/80">
-                        TRACK <span id="current-count" class="text-white font-extrabold">1</span> / <span id="total-count">0</span>
-                    </div>
-                    <div id="mode-badge" class="text-xs font-semibold text-cyan-200 bg-cyan-900/25 px-3 py-2 rounded-full border border-cyan-700/50">
-                        MODE: Full Quiz
-                    </div>
-                    <button onclick="prevQuestion()" class="btn-soft w-10 h-10 rounded-xl inline-flex items-center justify-center text-lg font-bold" title="Previous Piece" aria-label="Previous Piece">
-                        <span aria-hidden="true">&larr;</span>
-                    </button>
-                    <button onclick="nextQuestion()" class="btn-soft w-10 h-10 rounded-xl inline-flex items-center justify-center text-lg font-bold" title="Next Piece" aria-label="Next Piece">
-                        <span aria-hidden="true">&rarr;</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="space-y-2 pt-1">
-                <div class="flex items-center justify-between text-xs text-slate-300">
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-700/50 bg-emerald-900/25 text-emerald-200">
-                            <span class="text-emerald-300/90 font-semibold">C</span>
-                            <span id="correct-count" class="font-bold text-emerald-300">0</span>
-                        </span>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-rose-700/50 bg-rose-900/25 text-rose-200">
-                            <span class="text-rose-300/90 font-semibold">I</span>
-                            <span id="incorrect-count" class="font-bold text-rose-300">0</span>
-                        </span>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-sky-700/50 bg-sky-900/25 text-sky-200">
-                            <span class="text-sky-300/90 font-semibold">Accuracy</span>
-                            <span id="accuracy" class="font-bold text-sky-300">0%</span>
-                        </span>
-                    </div>
-                    <span class="text-slate-500 font-medium">Progress</span>
-                </div>
-                <div class="thin-progress">
-                    <span id="progress-fill"></span>
-                </div>
-            </div>
-
-            <div id="input-area" class="flex flex-col sm:flex-row gap-3">
-                <input type="text" id="user-guess"
-                    class="flex-grow bg-slate-900 border border-slate-600 rounded-xl px-4 py-3 text-lg text-slate-100 placeholder-slate-500 outline-none input-glow transition-all"
-                    placeholder="Type your genre guess..."
-                    autocomplete="off"
-                    onkeypress="handleKeyPress(event)">
-                <button id="submit-btn" onclick="checkAnswer()" class="btn-primary px-7 py-3 rounded-xl text-base">
-                    Check
-                </button>
-            </div>
-        </section>
-
-        <section id="feedback-panel" class="p-4 sm:p-4 hidden flex-col gap-3 reveal-anim">
-            <div id="result-banner" class="p-4 rounded-xl flex items-center gap-3 border"></div>
-            <div class="bg-slate-900 rounded-xl border border-slate-700 p-4">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
-                    <div class="rounded-lg bg-slate-950/60 border border-slate-700 px-3 py-2">
-                        <p class="text-[10px] uppercase tracking-wider text-slate-400">Genre</p>
-                        <p id="info-title" class="text-slate-100 text-lg font-extrabold leading-tight"></p>
-                    </div>
-                    <div class="rounded-lg bg-slate-950/60 border border-slate-700 px-3 py-2">
-                        <p class="text-[10px] uppercase tracking-wider text-slate-400">Title</p>
-                        <p id="info-composer" class="text-slate-200 font-semibold"></p>
-                    </div>
-                    <div class="rounded-lg bg-slate-950/60 border border-slate-700 px-3 py-2">
-                        <p class="text-[10px] uppercase tracking-wider text-slate-400">Artist</p>
-                        <p id="info-context" class="text-slate-200"></p>
+                <div class="status-cluster">
+                    <span id="content-status" class="status-pill status-warn">Fallback content</span>
+                    <div id="mini-leaderboard-launcher" class="leaderboard-launcher">
+                        <button onclick="setMiniLeaderboardOpen(!isMiniLeaderboardOpen)" class="floating-button" title="Leaderboard" aria-label="Leaderboard">
+                            <i data-lucide="trophy" aria-hidden="true"></i>
+                            <span class="floating-label">Leaderboard</span>
+                        </button>
                     </div>
                 </div>
-                <div class="mt-3 pt-3 border-t border-slate-700/80">
-                    <p class="text-[10px] uppercase tracking-wider text-slate-400 mb-1">Key Characteristics</p>
-                    <p id="info-characteristics" class="text-slate-200 leading-relaxed"></p>
-                </div>
-            </div>
-        </section>
+            </header>
+
+            <section class="workspace-grid">
+                <section class="panel media-panel" aria-labelledby="listen-heading">
+                    <div class="panel-header">
+                        <div>
+                            <p class="kicker">Listen</p>
+                            <h2 id="listen-heading" class="panel-title">Track <span id="current-count">1</span> of <span id="total-count">0</span></h2>
+                        </div>
+                        <div id="mode-badge" class="mode-badge">Full Quiz</div>
+                    </div>
+
+                    <div id="media-container" class="media-stage">
+                        <div class="loading-state">
+                            <i data-lucide="loader" class="animate-spin" aria-hidden="true"></i>
+                            <span>Loading audio</span>
+                        </div>
+                    </div>
+                </section>
+
+                <aside class="panel quiz-panel" aria-labelledby="quiz-question">
+                    <div class="question-row">
+                        <div>
+                            <p class="kicker">Genre</p>
+                            <h2 id="quiz-question" class="question-title">What genre is this piece?</h2>
+                        </div>
+                        <div class="nav-controls">
+                            <button onclick="prevQuestion()" class="icon-button" title="Previous Piece" aria-label="Previous Piece">
+                                <i data-lucide="chevron-left" aria-hidden="true"></i>
+                            </button>
+                            <button onclick="nextQuestion()" class="icon-button" title="Next Piece" aria-label="Next Piece">
+                                <i data-lucide="chevron-right" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid" aria-label="Score">
+                        <div class="stat-cell">
+                            <p class="stat-label">Correct</p>
+                            <span id="correct-count" class="stat-value ok">0</span>
+                        </div>
+                        <div class="stat-cell">
+                            <p class="stat-label">Missed</p>
+                            <span id="incorrect-count" class="stat-value bad">0</span>
+                        </div>
+                        <div class="stat-cell">
+                            <p class="stat-label">Accuracy</p>
+                            <span id="accuracy" class="stat-value">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="progress-block">
+                        <div class="progress-meta">
+                            <span>Progress</span>
+                            <span><span id="answered-count">0</span>/<span id="progress-total-count">0</span> answered</span>
+                        </div>
+                        <div class="thin-progress" aria-hidden="true">
+                            <span id="progress-fill"></span>
+                        </div>
+                    </div>
+
+                    <div id="input-area" class="guess-form">
+                        <input type="text" id="user-guess"
+                            class="answer-input"
+                            placeholder="Genre"
+                            autocomplete="off"
+                            onkeypress="handleKeyPress(event)">
+                        <div class="guess-actions">
+                            <button id="submit-btn" onclick="checkAnswer()" class="btn-primary">
+                                Check
+                            </button>
+                            <button id="reveal-btn" onclick="revealAnswer()" class="btn-secondary">
+                                Reveal
+                            </button>
+                        </div>
+                    </div>
+
+                    <section id="feedback-panel" class="feedback-panel hidden flex-col gap-3 reveal-anim">
+                        <div id="result-banner" class="result-banner"></div>
+                        <div class="answer-details">
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <p class="detail-label">Genre</p>
+                                    <p id="info-title" class="detail-value"></p>
+                                </div>
+                                <div class="detail-item">
+                                    <p class="detail-label">Title</p>
+                                    <p id="info-composer" class="detail-value"></p>
+                                </div>
+                                <div class="detail-item">
+                                    <p class="detail-label">Composer</p>
+                                    <p id="info-context" class="detail-value"></p>
+                                </div>
+                            </div>
+                            <p id="info-characteristics" class="detail-copy"></p>
+                        </div>
+                        <div class="answer-actions">
+                            <button id="continue-btn" onclick="nextQuestion()" class="btn-primary">Next</button>
+                        </div>
+                    </section>
+                </aside>
+            </section>
         </div>
     </main>
 
-
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all transform translate-y-10 pointer-events-none z-50 flex items-center gap-3">
-        <i data-lucide="info" class="text-teal-300 w-5 h-5"></i>
+    <div id="toast" class="toast opacity-0 translate-y-10">
+        <i data-lucide="info" aria-hidden="true"></i>
         <span id="toast-msg">Notification</span>
     </div>
 
-    <div id="mini-leaderboard-launcher" class="fixed bottom-4 right-4 z-40 hidden">
-        <button onclick="setMiniLeaderboardOpen(!isMiniLeaderboardOpen)" class="rounded-full border border-sky-700/70 bg-slate-900/95 px-4 py-2 text-xs font-bold uppercase tracking-wider text-sky-300 shadow-2xl hover:border-sky-500 transition-colors">
-            <i data-lucide="trophy" class="inline w-3.5 h-3.5 mr-1 -mt-0.5"></i>Leaderboard
-        </button>
-    </div>
-
-    <aside id="mini-leaderboard-panel" class="fixed bottom-4 right-4 z-40 w-64 sm:w-72 rounded-xl border border-slate-700 bg-slate-900/95 backdrop-blur p-3 shadow-2xl">
-        <div class="flex items-center justify-between mb-2">
-            <p class="text-xs uppercase tracking-wider text-sky-300 font-bold flex items-center gap-1.5">
-                <i data-lucide="trophy" class="w-3.5 h-3.5"></i>Leaderboard
-            </p>
-            <button onclick="setMiniLeaderboardOpen(false)" class="text-[10px] text-slate-400 hover:text-slate-200 transition-colors">Collapse ▾</button>
+    <aside id="mini-leaderboard-panel" class="mini-panel hidden">
+        <div class="mini-panel-head">
+            <div>
+                <p class="section-title">Leaderboard</p>
+                <p style="margin:2px 0 0;font-size:0.72rem;color:var(--subtle);font-weight:700;">Top 5</p>
+            </div>
+            <button onclick="setMiniLeaderboardOpen(false)" class="link-button">Close</button>
         </div>
-        <p class="text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">Top 5</p>
-        <ul id="mini-leaderboard-list" class="space-y-1 text-xs text-slate-100"></ul>
-        <button id="lb-toggle-all" onclick="toggleAllLeaderboardEntries()" class="mt-2 w-full text-center text-[10px] text-sky-400 hover:text-sky-200 py-1 border-t border-slate-700/50 transition-colors">
-            View all entries ▸
+        <ul id="mini-leaderboard-list" class="leaderboard-list"></ul>
+        <button class="view-all-btn" onclick="setFullLeaderboardOpen(true)">
+            <i data-lucide="list" style="width:13px;height:13px;" aria-hidden="true"></i>
+            View Full Leaderboard
         </button>
-        <div id="lb-all-entries" class="hidden mt-2 max-h-52 overflow-y-auto space-y-1 text-xs pr-0.5"></div>
     </aside>
 
-    <div id="end-quiz-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 p-4">
-        <div class="w-full max-w-4xl rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div id="full-leaderboard-modal" class="full-lb-modal hidden">
+        <div class="full-lb-card">
+            <div class="full-lb-header">
                 <div>
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-teal-400 font-bold">Playlist Complete</p>
-                    <h3 class="mt-2 text-2xl font-extrabold text-slate-100">What would you like to do next?</h3>
-                    <p class="mt-2 text-sm text-slate-400">You can review your results or restart with a fresh score.</p>
-                    <div class="mt-5 flex flex-col sm:flex-row gap-3">
-                        <button onclick="showResultsSummary()" class="btn-primary rounded-xl px-4 py-2.5 text-sm">View Results</button>
-                        <button onclick="startMissedRound()" class="btn-soft rounded-xl px-4 py-2.5 text-sm">Practice Missed</button>
-                        <button onclick="restartQuiz()" class="btn-soft rounded-xl px-4 py-2.5 text-sm">Restart</button>
+                    <p class="kicker">All Scores</p>
+                    <h3 class="full-lb-title">Full Leaderboard</h3>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button onclick="refreshLeaderboard(true)" class="btn-soft">Refresh</button>
+                    <button onclick="setFullLeaderboardOpen(false)" class="link-button">Close</button>
+                </div>
+            </div>
+            <div class="full-lb-body">
+                <p id="full-lb-status" class="status-line"></p>
+                <table class="full-lb-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>Questions</th>
+                            <th>Date</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="full-lb-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="end-quiz-modal" class="modal-backdrop hidden">
+        <div class="modal-card modal-wide">
+            <div class="modal-grid">
+                <div>
+                    <p class="kicker">Playlist Complete</p>
+                    <h3 class="modal-title">Review the round or keep practicing.</h3>
+                    <p class="modal-copy">Your full quiz score can be submitted once every track has an answer.</p>
+                    <div class="action-row">
+                        <button onclick="showResultsSummary()" class="btn-primary">View Results</button>
+                        <button onclick="startMissedRound()" class="btn-soft">Practice Missed</button>
+                        <button onclick="restartQuiz()" class="btn-soft">Restart</button>
                     </div>
                 </div>
-                <div class="rounded-xl border border-sky-700/50 bg-sky-950/20 p-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div class="leaderboard-box">
+                    <div class="leaderboard-head">
                         <div>
-                            <p class="text-sm font-bold text-sky-300">Leaderboard</p>
-                            <p class="text-xs text-sky-100/80">Ranked by percentage correct only - answer all questions to submit.</p>
+                            <p class="section-title">Leaderboard</p>
+                            <p class="modal-copy">Full quiz scores only.</p>
                         </div>
-                        <button onclick="refreshLeaderboard(true)" class="btn-soft rounded-xl px-3 py-2 text-xs">Refresh</button>
+                        <button onclick="refreshLeaderboard(true)" class="btn-soft">Refresh</button>
                     </div>
-                    <div class="mt-3 flex flex-col sm:flex-row gap-2">
+                    <div class="submit-row">
                         <input type="text" id="leaderboard-name"
-                            class="flex-grow bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none input-glow transition-all"
-                            placeholder="Name (required)"
+                            class="compact-input"
+                            placeholder="Name"
                             maxlength="24"
                             autocomplete="off">
-                        <button id="leaderboard-submit-btn" onclick="submitLeaderboardEntry()" class="btn-primary rounded-xl px-4 py-2 text-sm">
+                        <button id="leaderboard-submit-btn" onclick="submitLeaderboardEntry()" class="btn-primary">
                             Submit Score
                         </button>
                     </div>
-                    <p id="leaderboard-status" class="mt-2 text-xs text-slate-400"></p>
-                    <ul id="leaderboard-list" class="mt-3 space-y-1 text-sm text-slate-100"></ul>
+                    <p id="leaderboard-status" class="status-line"></p>
+                    <ul id="leaderboard-list" class="leaderboard-list"></ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="results-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 p-4">
-        <div class="w-full max-w-2xl rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
-            <p class="text-[11px] uppercase tracking-[0.14em] text-teal-400 font-bold">Results</p>
-            <h3 class="mt-2 text-2xl font-extrabold text-slate-100">How You Did</h3>
-            <p id="results-summary" class="mt-2 text-sm text-slate-400"></p>
-            <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="rounded-xl border border-emerald-700/50 bg-emerald-950/20 p-3">
-                    <p class="text-sm font-bold text-emerald-300">Correct</p>
-                    <ul id="correct-list" class="mt-2 text-sm text-emerald-100 space-y-1"></ul>
+    <div id="results-modal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <p class="kicker">Results</p>
+            <h3 class="modal-title">Round Summary</h3>
+            <p id="results-summary" class="modal-copy"></p>
+            <div class="results-grid">
+                <div class="results-box">
+                    <p class="section-title">Correct</p>
+                    <ul id="correct-list" class="results-list"></ul>
                 </div>
-                <div class="rounded-xl border border-rose-700/50 bg-rose-950/20 p-3">
-                    <p class="text-sm font-bold text-rose-300">Incorrect</p>
-                    <ul id="incorrect-list" class="mt-2 text-sm text-rose-100 space-y-1"></ul>
+                <div class="results-box">
+                    <p class="section-title">Missed</p>
+                    <ul id="incorrect-list" class="results-list"></ul>
                 </div>
             </div>
-            <div class="mt-5 flex flex-col sm:flex-row gap-3">
-                <button onclick="startMissedRound()" class="btn-soft rounded-xl px-4 py-2.5 text-sm">Practice Missed</button>
-                <button onclick="restartQuiz()" class="btn-primary rounded-xl px-4 py-2.5 text-sm">Restart</button>
-                <button onclick="closeResultsModal()" class="btn-soft rounded-xl px-4 py-2.5 text-sm">Close</button>
+            <div class="action-row">
+                <button onclick="startMissedRound()" class="btn-soft">Practice Missed</button>
+                <button onclick="restartQuiz()" class="btn-primary">Restart</button>
+                <button onclick="closeResultsModal()" class="btn-soft">Close</button>
             </div>
         </div>
     </div>
-    </div><!-- /tab-quiz -->
-
-    <!-- History Matrix Panel -->
-    <div id="tab-matrix" class="tab-panel">
-        <div id="history-matrix-root" style="height:100%;overflow-y:auto;"></div>
-    </div>
-
-    <script>
-        // --- TAB SWITCHING ---
-        function switchTab(name) {
-            ['quiz', 'matrix'].forEach(t => {
-                document.getElementById('tab-' + t).classList.toggle('active', t === name);
-                document.getElementById('tab-btn-' + t).classList.toggle('active', t === name);
-            });
-        }
-    </script>
 
     <script>
         // --- DATA CONFIG ---
@@ -435,9 +1366,9 @@
         let roundMode = 'full';
         let loadedQuizData = [...fallbackQuizData];
         let hasSubmittedCurrentRound = false;
-        let isMiniLeaderboardOpen = true;
-        let isLeaderboardExpanded = false;
-        let allLeaderboardEntries = [];
+        let isMiniLeaderboardOpen = false;
+        let isFullLeaderboardOpen = false;
+        let cachedLeaderboardEntries = [];
 
         // Shuffle Array
         function shuffle(array) {
@@ -460,13 +1391,13 @@
             if (!el) return;
 
             if (mode === 'live') {
-                el.innerText = 'Content: Live';
-                el.className = 'text-[11px] font-semibold px-2 py-1 rounded-full border border-emerald-700/50 bg-emerald-900/25 text-emerald-200';
+                el.innerText = 'Live content';
+                el.className = 'status-pill status-live';
                 return;
             }
 
-            el.innerText = 'Content: Fallback';
-            el.className = 'text-[11px] font-semibold px-2 py-1 rounded-full border border-amber-700/50 bg-amber-900/25 text-amber-200';
+            el.innerText = 'Fallback content';
+            el.className = 'status-pill status-warn';
         }
 
         function parseCsv(text) {
@@ -679,9 +1610,9 @@
             if (!status) return;
 
             const classMap = {
-                muted: 'mt-2 text-xs text-slate-400',
-                ok: 'mt-2 text-xs text-emerald-300',
-                bad: 'mt-2 text-xs text-rose-300'
+                muted: 'status-line',
+                ok: 'status-line status-ok',
+                bad: 'status-line status-bad'
             };
             status.className = classMap[style] || classMap.muted;
             status.innerText = message;
@@ -696,30 +1627,28 @@
                 .replace(/'/g, '&#39;');
         }
 
+        const RANK_MEDALS = ['🥇', '🥈', '🥉'];
+
+        function rankClass(index) {
+            return index < 3 ? `rank-${index + 1}` : '';
+        }
+
         function renderLeaderboard(entries) {
             const list = document.getElementById('leaderboard-list');
             if (!list) return;
 
             if (!entries.length) {
-                list.innerHTML = '<li class="text-slate-400 text-sm">No leaderboard entries yet.</li>';
+                list.innerHTML = '<li class="muted">No leaderboard entries yet.</li>';
                 return;
             }
 
-            const rankColors = ['text-amber-300', 'text-slate-300', 'text-orange-400'];
-            list.innerHTML = entries.map((entry, index) => {
-                const rankColor = rankColors[index] || 'text-sky-300';
-                const dateLabel = entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : '';
-                const datePart = dateLabel ? ` · ${dateLabel}` : '';
+            const shown = entries.slice(0, LEADERBOARD_MAX_ROWS);
+            list.innerHTML = shown.map((entry, index) => {
+                const medal = RANK_MEDALS[index] ? `<span class="rank-medal">${RANK_MEDALS[index]}</span>` : `<span class="rank">#${index + 1}</span> `;
                 return `
-                    <li class="rounded-lg border border-slate-700 bg-slate-900/70 px-3 py-2 flex items-center justify-between gap-2">
-                        <span class="flex items-center gap-2 min-w-0">
-                            <span class="font-bold ${rankColor} shrink-0">#${index + 1}</span>
-                            <span class="font-semibold truncate">${escapeHtml(entry.nickname)}</span>
-                        </span>
-                        <span class="flex items-center gap-2 text-sm shrink-0">
-                            <span class="text-slate-200 font-semibold">${entry.accuracy}%</span>
-                            <span class="text-slate-500">${entry.totalQuestions}q${escapeHtml(datePart)}</span>
-                        </span>
+                    <li class="leaderboard-row ${rankClass(index)}">
+                        <span>${medal} ${escapeHtml(entry.nickname)}</span>
+                        <strong>${entry.accuracy}%</strong>
                     </li>
                 `;
             }).join('');
@@ -731,65 +1660,53 @@
 
             const topEntries = entries.slice(0, MINI_LEADERBOARD_ROWS);
             if (!topEntries.length) {
-                list.innerHTML = '<li class="text-slate-400">No scores yet.</li>';
+                list.innerHTML = '<li class="muted">No scores yet.</li>';
                 return;
             }
 
-            const rankColors = ['text-amber-300', 'text-slate-300', 'text-orange-400'];
             list.innerHTML = topEntries.map((entry, index) => {
-                const rankColor = rankColors[index] || 'text-sky-300';
+                const medal = RANK_MEDALS[index] ? `<span class="rank-medal">${RANK_MEDALS[index]}</span>` : `<span class="rank">#${index + 1}</span>`;
                 return `
-                <li class="flex items-center justify-between gap-2 rounded-md border border-slate-700/80 bg-slate-800/70 px-2 py-1">
-                    <span class="truncate"><span class="${rankColor} font-bold mr-1">#${index + 1}</span>${escapeHtml(entry.nickname)}</span>
-                    <span class="text-slate-200 font-semibold">${entry.accuracy}%</span>
-                </li>`;
-            }).join('');
-        }
-
-        function renderAllEntriesPanel(entries) {
-            const container = document.getElementById('lb-all-entries');
-            if (!container) return;
-
-            if (!entries.length) {
-                container.innerHTML = '<p class="text-slate-400 py-1">No entries yet.</p>';
-                return;
-            }
-
-            const rankColors = ['text-amber-300', 'text-slate-300', 'text-orange-400'];
-            container.innerHTML = entries.map((entry, index) => {
-                const rankColor = rankColors[index] || 'text-sky-300';
-                const dateLabel = entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : '';
-                return `
-                    <div class="rounded border border-slate-700/60 bg-slate-800/50 px-2 py-1.5">
-                        <div class="flex items-center justify-between gap-1">
-                            <span class="truncate">
-                                <span class="${rankColor} font-bold">#${index + 1}</span>
-                                <span class="text-slate-100 ml-1">${escapeHtml(entry.nickname)}</span>
-                            </span>
-                            <span class="text-slate-200 font-semibold shrink-0">${entry.accuracy}%</span>
-                        </div>
-                        <div class="text-slate-500 mt-0.5">${entry.totalQuestions} questions${dateLabel ? ' · ' + escapeHtml(dateLabel) : ''}</div>
-                    </div>
+                    <li class="mini-row ${rankClass(index)}">
+                        <span>${medal} ${escapeHtml(entry.nickname)}</span>
+                        <strong>${entry.accuracy}%</strong>
+                    </li>
                 `;
             }).join('');
+
+            lucide.createIcons();
         }
 
-        function updateAllEntriesToggleLabel() {
-            const btn = document.getElementById('lb-toggle-all');
-            if (!btn) return;
-            const count = allLeaderboardEntries.length;
-            if (isLeaderboardExpanded) {
-                btn.textContent = 'Show less ▴';
-            } else {
-                btn.textContent = count > 0 ? `View all ${count} entries ▸` : 'View all entries ▸';
+        function renderFullLeaderboard(entries) {
+            const body = document.getElementById('full-lb-body');
+            const status = document.getElementById('full-lb-status');
+            if (!body) return;
+
+            if (!entries.length) {
+                body.innerHTML = '<tr><td colspan="5" class="muted" style="padding:14px 10px;">No scores yet.</td></tr>';
+                if (status) status.textContent = '';
+                return;
             }
-        }
 
-        function toggleAllLeaderboardEntries() {
-            isLeaderboardExpanded = !isLeaderboardExpanded;
-            const container = document.getElementById('lb-all-entries');
-            if (container) container.classList.toggle('hidden', !isLeaderboardExpanded);
-            updateAllEntriesToggleLabel();
+            if (status) {
+                status.textContent = `${entries.length} entr${entries.length === 1 ? 'y' : 'ies'} · ranked by accuracy`;
+                status.className = 'status-line status-ok';
+            }
+
+            body.innerHTML = entries.map((entry, index) => {
+                const medal = RANK_MEDALS[index] || `#${index + 1}`;
+                const dateLabel = entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : '—';
+                const accuracyClass = entry.accuracy >= 70 ? 'lb-accuracy' : 'lb-accuracy lb-accuracy-low';
+                return `
+                    <tr class="${rankClass(index)}">
+                        <td style="font-weight:800;">${medal}</td>
+                        <td style="font-weight:700;">${escapeHtml(entry.nickname)}</td>
+                        <td class="lb-meta">${entry.totalQuestions}</td>
+                        <td class="lb-meta">${escapeHtml(dateLabel)}</td>
+                        <td><span class="${accuracyClass}">${entry.accuracy}%</span></td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function setMiniLeaderboardOpen(isOpen) {
@@ -805,6 +1722,23 @@
             }
         }
 
+        function setFullLeaderboardOpen(isOpen) {
+            isFullLeaderboardOpen = !!isOpen;
+            const modal = document.getElementById('full-leaderboard-modal');
+            if (!modal) return;
+
+            modal.classList.toggle('hidden', !isFullLeaderboardOpen);
+
+            if (isFullLeaderboardOpen) {
+                if (cachedLeaderboardEntries.length) {
+                    renderFullLeaderboard(cachedLeaderboardEntries);
+                } else {
+                    refreshLeaderboard(true);
+                }
+                setMiniLeaderboardOpen(false);
+            }
+        }
+
         function getLeaderboardEntriesFromResponse(payload) {
             if (Array.isArray(payload)) return payload;
             if (payload && Array.isArray(payload.entries)) return payload.entries;
@@ -815,7 +1749,7 @@
             if (!LEADERBOARD_URL.trim()) {
                 setLeaderboardStatus('Leaderboard endpoint not configured yet.', 'bad');
                 renderLeaderboard([]);
-                renderAllEntriesPanel([]);
+                renderFullLeaderboard([]);
                 return;
             }
 
@@ -827,23 +1761,21 @@
                 }
 
                 const payload = await response.json();
-                const allEntries = getLeaderboardEntriesFromResponse(payload)
+                const entries = getLeaderboardEntriesFromResponse(payload)
                     .map(normalizeLeaderboardEntry)
                     .filter(Boolean)
                     .sort((a, b) => b.accuracy - a.accuracy);
 
-                allLeaderboardEntries = allEntries;
-                renderLeaderboard(allEntries.slice(0, LEADERBOARD_MAX_ROWS));
-                renderMiniLeaderboard(allEntries.slice(0, MINI_LEADERBOARD_ROWS));
-                renderAllEntriesPanel(allEntries);
-                updateAllEntriesToggleLabel();
+                cachedLeaderboardEntries = entries;
+                renderLeaderboard(entries);
+                renderMiniLeaderboard(entries);
+                if (isFullLeaderboardOpen) renderFullLeaderboard(entries);
                 setLeaderboardStatus('Live leaderboard loaded.', 'ok');
             } catch (err) {
-                allLeaderboardEntries = [];
+                cachedLeaderboardEntries = [];
                 renderLeaderboard([]);
                 renderMiniLeaderboard([]);
-                renderAllEntriesPanel([]);
-                updateAllEntriesToggleLabel();
+                renderFullLeaderboard([]);
                 setLeaderboardStatus('Could not load leaderboard right now.', 'bad');
                 if (showToastOnError) showToast('Leaderboard unavailable right now.');
             }
@@ -946,19 +1878,21 @@
             document.getElementById('accuracy').innerText = `${accuracy}%`;
         }
 
-        function updateProgress(index) {
+        function updateProgress() {
             const total = activeQuizData.length || 1;
-            const current = index + 1;
-            const percent = Math.min(100, Math.round((current / total) * 100));
+            const answeredCount = questionResults.filter(Boolean).length;
+            const percent = Math.min(100, Math.round((answeredCount / total) * 100));
             const fill = document.getElementById('progress-fill');
+            const answeredLabel = document.getElementById('answered-count');
 
             if (fill) fill.style.width = `${percent}%`;
+            if (answeredLabel) answeredLabel.innerText = answeredCount;
         }
 
         function updateRoundBadge() {
             const badge = document.getElementById('mode-badge');
             if (!badge) return;
-            badge.innerText = `MODE: ${roundMode === 'missed' ? 'Missed Practice' : 'Full Quiz'}`;
+            badge.innerText = roundMode === 'missed' ? 'Missed Practice' : 'Full Quiz';
         }
 
         function normalizeText(value) {
@@ -1065,6 +1999,7 @@
             closeResultsModal();
             updateRoundBadge();
             document.getElementById('total-count').innerText = activeQuizData.length;
+            document.getElementById('progress-total-count').innerText = activeQuizData.length;
             loadQuestion(0);
             updateScoreboard();
         }
@@ -1097,6 +2032,7 @@
             questionResults = Array.from({ length: activeQuizData.length }, () => null);
             updateRoundBadge();
             document.getElementById('total-count').innerText = activeQuizData.length;
+            document.getElementById('progress-total-count').innerText = activeQuizData.length;
             loadQuestion(0);
             updateScoreboard();
             showToast(`Practice Missed started: ${activeQuizData.length} track${activeQuizData.length === 1 ? '' : 's'}.`);
@@ -1112,8 +2048,13 @@
             document.getElementById('user-guess').value = '';
             document.getElementById('user-guess').disabled = false;
             document.getElementById('submit-btn').disabled = false;
+            document.getElementById('reveal-btn').disabled = false;
+            document.getElementById('submit-btn').innerText = 'Check';
             document.getElementById('submit-btn').classList.remove('opacity-60', 'cursor-not-allowed');
-            document.getElementById('user-guess').focus();
+            document.getElementById('reveal-btn').classList.remove('opacity-60', 'cursor-not-allowed');
+            if (window.matchMedia('(min-width: 700px)').matches) {
+                document.getElementById('user-guess').focus();
+            }
             document.getElementById('feedback-panel').classList.add('hidden');
             document.getElementById('feedback-panel').classList.remove('flex');
             updateProgress(index);
@@ -1125,7 +2066,10 @@
                 document.getElementById('user-guess').value = savedResult.guessRaw;
                 document.getElementById('user-guess').disabled = true;
                 document.getElementById('submit-btn').disabled = true;
+                document.getElementById('reveal-btn').disabled = true;
+                document.getElementById('submit-btn').innerText = 'Done';
                 document.getElementById('submit-btn').classList.add('opacity-60', 'cursor-not-allowed');
+                document.getElementById('reveal-btn').classList.add('opacity-60', 'cursor-not-allowed');
                 answered = true;
             }
             initIcons();
@@ -1147,18 +2091,21 @@
             }
 
             container.innerHTML = `
-                <div class="flex flex-col items-center w-full h-full gap-2 transition-all duration-500 ease-in-out">
-                    <iframe id="main-iframe" src="${src}" 
-                        class="w-full h-full min-h-[280px] rounded-xl shadow-sm bg-black border border-slate-700" 
-                        allow="autoplay; encrypted-media; fullscreen" 
-                        allowfullscreen>
-                    </iframe>
-                </div>
+                <iframe id="main-iframe" src="${src}"
+                    class="media-iframe"
+                    allow="autoplay; encrypted-media; fullscreen"
+                    allowfullscreen>
+                </iframe>
             `;
         }
 
         function handleKeyPress(e) {
-            if(e.key === 'Enter') checkAnswer();
+            if (e.key !== 'Enter') return;
+            if (answered) {
+                nextQuestion();
+                return;
+            }
+            checkAnswer();
         }
 
         function checkAnswer() {
@@ -1175,7 +2122,10 @@
             answered = true;
             guessInput.disabled = true;
             document.getElementById('submit-btn').disabled = true;
+            document.getElementById('reveal-btn').disabled = true;
+            document.getElementById('submit-btn').innerText = 'Done';
             document.getElementById('submit-btn').classList.add('opacity-60', 'cursor-not-allowed');
+            document.getElementById('reveal-btn').classList.add('opacity-60', 'cursor-not-allowed');
 
             // Supports slash-based alternatives and minor misspellings.
             const isCorrect = genreCandidates.some((candidate) => isCloseMatch(userGuess, candidate));
@@ -1191,40 +2141,67 @@
                 guessRaw: userGuessRaw
             };
             updateScoreboard();
+            updateProgress();
             renderAnswerFeedback(questionResults[currentIndex], currentItem, true);
             
+            initIcons();
+        }
+
+        function revealAnswer() {
+            if (answered) return;
+
+            const guessInput = document.getElementById('user-guess');
+            const currentItem = activeQuizData[currentIndex];
+
+            answered = true;
+            incorrectCount += 1;
+            questionResults[currentIndex] = {
+                isCorrect: false,
+                guessRaw: 'Revealed answer',
+                wasRevealed: true
+            };
+
+            guessInput.value = 'Revealed answer';
+            guessInput.disabled = true;
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('reveal-btn').disabled = true;
+            document.getElementById('submit-btn').innerText = 'Done';
+            document.getElementById('submit-btn').classList.add('opacity-60', 'cursor-not-allowed');
+            document.getElementById('reveal-btn').classList.add('opacity-60', 'cursor-not-allowed');
+
+            updateScoreboard();
+            updateProgress();
+            renderAnswerFeedback(questionResults[currentIndex], currentItem, true);
             initIcons();
         }
 
         function renderAnswerFeedback(result, item, shouldCelebrate = false) {
             const banner = document.getElementById('result-banner');
             if (result.isCorrect) {
-                banner.className = 'p-4 rounded-xl flex items-center gap-3 border border-emerald-700/50 bg-emerald-900/30';
+                banner.className = 'result-banner result-correct';
                 banner.innerHTML = `
-                     <div class="bg-emerald-600 p-2 rounded-full text-white"><i data-lucide="check" class="w-6 h-6"></i></div>
-                    <div class="w-full">
-                        <h3 class="text-emerald-300 font-bold text-lg">Correct Answer!</h3>
-                        <div class="mt-2 inline-flex flex-wrap items-center gap-2 text-sm">
-                            <span class="rounded-md border border-emerald-500/60 bg-emerald-950/40 px-2.5 py-1 text-emerald-100">
-                                Genre: <strong>${item.genre}</strong>
-                            </span>
-                        </div>
+                    <div class="result-icon"><i data-lucide="check" aria-hidden="true"></i></div>
+                    <div>
+                        <h3>Correct</h3>
+                        <p><strong>${escapeHtml(item.genre)}</strong> was the genre.</p>
+                    </div>
+                `;
+            } else if (result.wasRevealed) {
+                banner.className = 'result-banner result-wrong';
+                banner.innerHTML = `
+                    <div class="result-icon"><i data-lucide="eye" aria-hidden="true"></i></div>
+                    <div>
+                        <h3>Answer revealed</h3>
+                        <p>Correct genre: <strong>${escapeHtml(item.genre)}</strong>.</p>
                     </div>
                 `;
             } else {
-                banner.className = 'p-4 rounded-xl flex items-center gap-3 border border-rose-700/50 bg-rose-900/30';
+                banner.className = 'result-banner result-wrong';
                 banner.innerHTML = `
-                    <div class="bg-rose-600 p-2 rounded-full text-white"><i data-lucide="x" class="w-6 h-6"></i></div>
-                    <div class="w-full">
-                        <h3 class="text-rose-300 font-bold text-lg">Not quite right.</h3>
-                        <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-                            <span class="rounded-md border border-rose-500/60 bg-rose-950/50 px-2.5 py-1 text-rose-100">
-                                Your guess: <strong>"${result.guessRaw}"</strong>
-                            </span>
-                            <span class="rounded-md border border-emerald-500/60 bg-emerald-950/40 px-2.5 py-1 text-emerald-100">
-                                Correct: <strong>${item.genre}</strong>
-                            </span>
-                        </div>
+                    <div class="result-icon"><i data-lucide="x" aria-hidden="true"></i></div>
+                    <div>
+                        <h3>Not quite</h3>
+                        <p>You guessed <strong>${escapeHtml(result.guessRaw)}</strong>. Correct genre: <strong>${escapeHtml(item.genre)}</strong>.</p>
                     </div>
                 `;
             }
@@ -1238,8 +2215,9 @@
             panel.classList.remove('hidden');
             panel.classList.add('flex');
 
-            if (result.isCorrect && shouldCelebrate) {
-                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#10b981', '#34d399', '#6ee7b7'] });
+            const continueButton = document.getElementById('continue-btn');
+            if (continueButton) {
+                continueButton.innerText = currentIndex < activeQuizData.length - 1 ? 'Next' : 'Finish';
             }
         }
 
@@ -1294,9 +2272,11 @@
             questionResults.forEach((result, index) => {
                 if (!result) return;
                 const item = activeQuizData[index];
-                const label = `${index + 1}. ${item.title} (${item.genre})`;
+                const label = `${index + 1}. ${item.genre} - ${item.title}`;
                 if (result.isCorrect) {
                     correctItems.push(label);
+                } else if (result.wasRevealed) {
+                    incorrectItems.push(`${label} - answer revealed`);
                 } else {
                     incorrectItems.push(`${label} - your guess: "${result.guessRaw}"`);
                 }
@@ -1306,11 +2286,11 @@
                 `${correctCount} correct, ${incorrectCount} incorrect, ${accuracy}% accuracy. ${unanswered} unanswered.`;
 
             document.getElementById('correct-list').innerHTML = correctItems.length
-                ? correctItems.map((line) => `<li>${line}</li>`).join('')
+                ? correctItems.map((line) => `<li>${escapeHtml(line)}</li>`).join('')
                 : '<li>None yet.</li>';
 
             document.getElementById('incorrect-list').innerHTML = incorrectItems.length
-                ? incorrectItems.map((line) => `<li>${line}</li>`).join('')
+                ? incorrectItems.map((line) => `<li>${escapeHtml(line)}</li>`).join('')
                 : '<li>None.</li>';
 
             showResultsModal();
@@ -1380,10 +2360,19 @@
             initIcons();
 
             document.addEventListener('keydown', (e) => {
-                const activeEl = document.activeElement;
-                const typingInGuess = activeEl && activeEl.id === 'user-guess';
+                if (e.key === 'Escape') {
+                    if (isFullLeaderboardOpen) { setFullLeaderboardOpen(false); return; }
+                    if (isMiniLeaderboardOpen) { setMiniLeaderboardOpen(false); return; }
+                }
 
-                if (typingInGuess) return;
+                const activeEl = document.activeElement;
+                const typingInField = activeEl && ['INPUT', 'TEXTAREA'].includes(activeEl.tagName);
+                const modalOpen =
+                    !document.getElementById('end-quiz-modal').classList.contains('hidden') ||
+                    !document.getElementById('results-modal').classList.contains('hidden');
+
+                if (typingInField || modalOpen) return;
+                if (e.key === 'Enter' && answered) nextQuestion();
                 if (e.key === 'ArrowRight') nextQuestion();
                 if (e.key === 'ArrowLeft') prevQuestion();
             });
@@ -1392,367 +2381,5 @@
         };
 
     </script>
-
-    <!-- Geo-Historical Matrix React App -->
-    <script type="text/babel">
-    (function() {
-        const { useState, useMemo } = React;
-
-        // Use lucide-react icons from UMD bundle if available, else fallback SVG wrappers
-        const LR = window.LucideReact || {};
-        const mkIcon = (name) => {
-            const Comp = LR[name];
-            if (Comp) return (props) => React.createElement(Comp, props);
-            return ({className}) => React.createElement('span', {className}, '');
-        };
-        const Search = mkIcon('Search');
-        const MapIcon = mkIcon('Map');
-        const Volume2 = mkIcon('Volume2');
-        const Music = mkIcon('Music');
-        const Palette = mkIcon('Palette');
-        const Globe = mkIcon('Globe');
-        const ChevronDown = mkIcon('ChevronDown');
-        const Layers = mkIcon('Layers');
-        const Clock = mkIcon('Clock');
-        const MapPin = mkIcon('MapPin');
-        const BookOpen = mkIcon('BookOpen');
-        const Landmark = mkIcon('Landmark');
-        const ShieldAlert = mkIcon('ShieldAlert');
-        const Crosshair = mkIcon('Crosshair');
-        const XIcon = mkIcon('X');
-        const Maximize2 = mkIcon('Maximize2');
-        const Minimize2 = mkIcon('Minimize2');
-        const Menu = mkIcon('Menu');
-
-        const database = [
-            { id:'a1', year:'1800 - 1850s', sortYear:1800, category:'Art', type:'period', title:'Romanticism', creator:'Art Style Period', location:'Europe (Centered in France, Germany, Britain)', shortDesc:'Emphasis on emotion, individualism, and the sublime power of nature.', context:'Following the extreme rationality of the Enlightenment and the bloody aftermath of the French Revolution, Europe was shifting. People felt alienated by the new Industrial Revolution. In response, artists retreated into nature, emotion, and national myths.', details:'A reaction against the scientific rationality of neoclassicism. Romantic artists prioritized intense emotion as an authentic source of aesthetic experience. Key characteristics include a focus on untamed nature, heroic individualism, the supernatural, and a nostalgic view of the medieval past. It mirrored the musical shift towards emotional expression seen in early Beethoven, Rossini, and Wagner.', tags:['Emotion','Nature','Individualism','Anti-Enlightenment'] },
-            { id:'a2', year:'1840 - 1880s', sortYear:1840, category:'Art', type:'period', title:'Realism', creator:'Art Style Period', location:'France (Spread globally)', shortDesc:'Depicting everyday subjects and the working class without idealization.', context:'The Industrial Revolution was creating massive wealth disparity. The working class (proletariat) was living in brutal conditions in urban centers. The 1848 revolutions across Europe sparked a new political awareness of the poor.', details:'A direct rejection of Romanticism. Realists sought to portray real contemporary people and situations with truth and accuracy, not avoiding unpleasant or sordid aspects of life. Driven by the Industrial Revolution, artists like Gustave Courbet elevated poor laborers to the massive canvas sizes previously reserved for historical or religious epics.', tags:['Working Class','Industrial Revolution','Anti-Romanticism'] },
-            { id:'a3', year:'1870 - 1890s', sortYear:1870, category:'Art', type:'period', title:'Impressionism', creator:'Art Style Period', location:'Paris, France', shortDesc:'Capturing the transient effects of light and color with visible brushstrokes.', context:'Paris was undergoing "Haussmannization"—a massive urban renewal project. The middle class now had leisure time, and the invention of paint in tubes allowed artists to paint outside.', details:'Characterized by relatively small, thin, yet visible brush strokes, open composition, and an emphasis on accurate depiction of light in its changing qualities. Often painted en plein air (outdoors) to capture the fleeting moments of modern Parisian life.', tags:['Light','Modern Life','En Plein Air','Leisure'] },
-            { id:'a4', year:'1886 - 1905', sortYear:1886, category:'Art', type:'period', title:'Post-Impressionism', creator:'Art Style Period', location:'France / Netherlands', shortDesc:'Moving beyond light to explore deeper emotional and structural forms.', context:'As the century closed, artists felt Impressionism was too superficial. Europe was becoming highly industrialized and psychologically tense, leading artists to seek deeper meaning, symbolism, and psychological depth.', details:'Emerged as a reaction against Impressionists\' concern for the naturalistic depiction of light and color. Artists like Van Gogh, Cézanne, and Seurat used vivid colors, thick application of paint, and real-life subject matter, but emphasized geometric forms, distorted form for expressive effect.', tags:['Structure','Symbolism','Expression','Psychological'] },
-            { id:'m1', year:'1815', sortYear:1815, category:'Music', title:'The Barber of Seville', creator:'Gioachino Rossini', location:'Rome, Papal States (Italy)', shortDesc:'Masterpiece of comedic opera (Opera Buffa).', context:'Europe was recovering from the Napoleonic Wars. The Congress of Vienna (1815) had just re-established conservative monarchies, but the public hungered for accessible, highly entertaining art.', details:'Represents the early 19th-century surge in Romantic Opera. Rossini heavily contributed to the "Democratization of Music," where music spread across Europe to all classes, leading to opera halls being built far and wide.', tags:['Romantic Opera','Rossini'] },
-            { id:'m2', year:'1829', sortYear:1829, category:'Music', title:'William Tell Overture', creator:'Gioachino Rossini', location:'Paris, France', shortDesc:"Iconic instrumental introduction to Rossini's final opera.", context:'The opera tells the story of the Swiss fight for independence against the Austrian Habsburgs—a highly relevant theme as nationalistic movements began brewing across Europe against empires.', details:'A major work by Rossini. The soaring melodies and intense rhythmic drive are prime examples of early Romantic orchestral music, leading to the broader democratization of the art form.', tags:['Romantic Opera','Rossini','Nationalism'] },
-            { id:'m4', year:'1841', sortYear:1841, category:'Music', title:'Triumphal March from Aida', creator:'Giuseppe Verdi', location:'Cairo, Egypt (Commission) / Italy', shortDesc:'A massive, majestic march requiring immense orchestration.', context:'Commissioned to celebrate the opening of the Khedivial Opera House in Egypt (shortly after the Suez Canal opened), reflecting European imperial influence and fascination with the "exotic" East.', details:'Requires massive "Orchestration" (who plays what/when), featuring stage bands and long trumpets. Verdi was a master of Romantic Opera and his music often subtly supported the Italian unification (Risorgimento).', tags:['Romantic Opera','Verdi','Imperialism'] },
-            { id:'m5', year:'1842', sortYear:1842, category:'Music', title:'Chorus of the Hebrew Slaves (Nabucco)', creator:'Giuseppe Verdi', location:'Milan, Lombardy-Venetia (Austrian Empire)', shortDesc:'An unofficial anthem for Italian Unification.', context:'Northern Italy was ruled by the Austrian Empire. Italians felt like captives in their own land. This opera, while technically about ancient Hebrews, was widely understood as an allegory for Italian oppression.', details:'The story of enslaved Hebrews longing for their homeland deeply resonated with Italians under Austrian rule. "Va, pensiero" became the soundtrack of the Risorgimento.', tags:['Romantic Opera','Nationalism','Verdi','Risorgimento'] },
-            { id:'m8', year:'1862', sortYear:1862, category:'Music', title:'Ride of the Valkyries (The Ring Cycle)', creator:'Richard Wagner', location:'Bavaria (Germany)', shortDesc:'Intense orchestration showcasing mythological power.', context:'Germany was pushing toward unification under Prussia. Wagner sought to create a uniquely "German" art form that rejected Italian/French styles, drawing heavily on Norse/Germanic pagan mythology to forge a national cultural identity.', details:'A perfect study for "Amplitude" (loudness) and "Orchestration". The brass section carries the melody over a swirling string harmony, reflecting the intense nationalistic focus of German music. The Ring Cycle served as a national epic.', tags:['Romanticism','Wagner','German Nationalism'] },
-            { id:'m15', year:'1893', sortYear:1893, category:'Music', title:'Symphony no 9, From the New World', creator:'Antonin Dvorak', location:'New York, USA / Bohemia', shortDesc:'Inspired by American folk and indigenous music.', context:'Dvorak, a Czech nationalist composer, visited the USA and noticed the country lacked its own "classical" identity. He urged Americans to look to African-American spirituals and Native American music as the foundation for an American style.', details:'Dvorak incorporated the "feel" of African-American spirituals and Native American melodies into traditional European symphonic form. Masterful orchestration and rhythm patterns. A cross-cultural expression of Nationalism.', tags:['Symphony','Dvorak','American Identity'] },
-            { id:'h1', year:'1846', sortYear:1846, category:'History', title:'The Program of Count Cavour', creator:'Camillo Benso, Count of Cavour', location:'Kingdom of Piedmont-Sardinia (Northern Italy)', shortDesc:'Strategic vision for Italian unification under a monarchy.', context:"Italy was a patchwork of states. The South was ruled by Bourbons, the center by the Pope, and the North directly by the Austrian Empire. Cavour realized romantic rebellions (like Mazzini's) kept failing. Italy needed a strong, industrialized state (Piedmont-Sardinia) and a modern army to lead the charge.", details:"Key arguments:\n• People need a feeling of nationality to come together instead of staying so divided.\n• Crucially: The cause of Italy is for the first time being supported by an Italian Power (Sardinia).\n• Rejects radical republicanism in favor of pragmatic, constitutional monarchy (Realpolitik).", tags:['Italian Unification','Realpolitik'] },
-            { id:'h2', year:'1851', sortYear:1851, category:'History', title:'Liberalism and Social Darwinism', creator:'Herbert Spencer', location:'Great Britain', shortDesc:'Application of biological concepts to human society and economics.', context:"Britain was the undisputed industrial powerhouse of the world. While the wealthy industrialists lived in luxury, the working class suffered in slums. Spencer provided a convenient 'scientific' justification for this inequality.", details:"Key arguments:\n• Society improves with competition (he coined 'survival of the fittest,' not Darwin).\n• Helping the poor interferes with the process of natural selection.\n• Society naturally removes weak people, and 'science' backs it up.\n• Used to justify unregulated laissez-faire capitalism and, later, extreme Imperialism.", tags:['Social Darwinism','Pseudo-science','Capitalism'] },
-            { id:'h3', year:'1858', sortYear:1858, category:'History', title:'Meeting with Emperor Napoleon III', creator:'Count Cavour', location:'Plombières-les-Bains, France', shortDesc:'Secret alliance to drive Austria out of Italy.', context:'Cavour knew Piedmont-Sardinia could not defeat the massive Austrian Empire alone. He secretly met with the French Emperor Napoleon III at a spa town. They agreed that if Austria attacked Piedmont, France would intervene.', details:"Key arguments:\n• The Emperor of France supports Sardinia if there is ever a war between them and Austria.\n• Cavour skillfully orchestrated border tensions to force Austria to declare war first, triggering the defensive alliance with France. This won Lombardy for Italy.", tags:['Italian Unification','Diplomacy','Realpolitik'] },
-            { id:'h4', year:'1859 / 1871', sortYear:1859, category:'History', title:'On the Origin of Species & Descent of Man', creator:'Charles Darwin', location:'Great Britain / Global Voyage', shortDesc:'Foundational texts of evolutionary biology.', context:"Following his voyage on the HMS Beagle to the Galapagos, Darwin compiled evidence that challenged the literal Biblical interpretation of creation. Victorian society was highly religious, making his publication deeply controversial.", details:"Key arguments:\n• Nature cannot create sudden changes; evolution happens in short, slow steps through the agency of natural selection.\n• Humans share a common ancestor with lower beings (primates).\n• Deeply destabilizing for the population's worldview, fundamentally altering science, religion, and philosophy.", tags:['Science','Evolution','Enlightenment'] },
-            { id:'h5', year:'1861', sortYear:1861, category:'History', title:'Speech of King Vittorio Emanuele', creator:'Vittorio Emanuele II', location:'Turin, Italy', shortDesc:'Declaration of a unified Italian state.', context:"After Cavour's diplomacy in the north and Giuseppe Garibaldi's military conquests in the south (with his 'Red Shirts'), the two halves of Italy were joined. The first Italian parliament met in Turin.", details:"Key arguments:\n• Italy is finally unified (though Rome and Venice were still missing at this exact moment).\n• Europe is accepting Italy as a legitimate nation on the world stage.\n• The forces of Liberalism and constitutional government are prevailing.", tags:['Italian Unification','Monarchy'] },
-            { id:'h6', year:'1862', sortYear:1862, category:'History', title:'Blood and Iron Speech', creator:'Otto von Bismarck', location:'Prussia (Modern-day Germany)', shortDesc:'Ruthless Realpolitik strategy for German unification.', context:"The Prussian King Wilhelm I wanted to expand the army, but the liberal parliament refused to approve the taxes. The King appointed Bismarck as Prime Minister to solve the crisis.", details:"Key arguments:\n• There is a constitutional crisis in Prussia; the individual is breaking apart from the whole.\n• Prussia's borders are vulnerable and cannot support a healthy state without a massive military.\n• 'The great questions of the time will not be resolved by speeches and majority decisions... but by iron and blood.'", tags:['German Unification','Realpolitik','Militarism'] },
-            { id:'h7', year:'1875', sortYear:1875, category:'History', title:'The Duties of a Man', creator:'Giuseppe Mazzini', location:'Italy (Written in Exile)', shortDesc:'Call for humanitarian duty over strict nationalism.', context:'Mazzini was the "Heart" of Italian unification. He spent his life fighting for a democratic, republican Italy. By 1875, Italy was united as a Monarchy. Mazzini was deeply disappointed.', details:"Key arguments:\n• Duty is towards humanity first; we are men before we are citizens.\n• You need to believe in God and give charity.\n• Humans cannot unify everybody globally because everyone is unique, hence nations exist.\n• Strict, aggressive nationalities are bad.\n• Love your country, but do not disobey your duty to humanity.", tags:['Humanitarianism','Romantic Nationalism'] },
-            { id:'h8', year:'1880s - 1914', sortYear:1880, category:'History', title:'New Imperialism & Scramble for Africa', creator:'European Powers', location:'Europe, Africa, Asia (Berlin Conference 1884)', shortDesc:'Rapid, aggressive colonization driven by the Industrial Revolution.', context:'European nations, running out of resources and markets at home due to extreme industrialization, turned outward. At the 1884 Berlin Conference, they literally drew lines on a map of Africa to divide it among themselves.', details:"Advances in tech allowed deep penetration into Africa:\n• Quinine (medicine to combat malaria).\n• The Maxim Machine Gun (overwhelming military advantage).\n• Steamboats & Telegraphs (navigation and communication).\nMotivated by Economic needs, Nationalistic competition, and justified by false Humanitarian/Social Darwinist beliefs.", tags:['Imperialism','Industrial Revolution','Colonialism'] },
-            { id:'h9', year:'1899', sortYear:1899, category:'History', title:"The White Man's Burden", creator:'Rudyard Kipling', location:'Great Britain / USA (Philippines)', shortDesc:'Poem urging the "burden" of empire as a moral duty.', context:'Written just after the Spanish-American War, where the USA acquired the Philippines, Puerto Rico, and Guam. Kipling, a British imperialist, wrote this to encourage the US to embrace its new role as an empire.', details:"Key arguments:\n• White men need to deal with the heavy responsibility of governing other races.\n• Colonizing is framed not as theft, but as a 'great burden' and a noble sacrifice.\n• Claims that if famine hurts the colonized, the colonizer must help them, framing imperialism as a humanitarian rescue mission (deeply racist pseudo-science).", tags:['Imperialism','Social Darwinism','Ethnocentrism'] },
-            { id:'h10', year:'1903', sortYear:1903, category:'History', title:"The Black Man's Burden", creator:'Edward Morel', location:'Great Britain / Congo Free State', shortDesc:'Scathing rebuttal to Kipling, exposing colonial atrocities.', context:'Morel worked for a British shipping company and noticed that ships going to the Congo carried only guns and soldiers, while ships returning carried massive amounts of valuable rubber. He uncovered a horrific system of slave labor.', details:"Key arguments:\n• Black people were never left under 'oppression' before Europeans arrived; the African man survived all natural disasters but cannot survive the material savageness of white men.\n• The oppression is worse than physical murder; it destroys the soul and society.\n• Completely shatters the illusion that colonizers are 'helping' the black man.", tags:['Anti-Imperialism','Human Rights','Congo Atrocities'] }
-        ];
-
-        const sortedData = [...database].sort((a, b) => a.sortYear - b.sortYear);
-
-        const categoryStyles = {
-            History: { bg: 'bg-amber-600', text: 'text-amber-700', light: 'bg-amber-50', border: 'border-amber-200' },
-            Music: { bg: 'bg-indigo-600', text: 'text-indigo-700', light: 'bg-indigo-50', border: 'border-indigo-200' },
-            Art: { bg: 'bg-emerald-600', text: 'text-emerald-700', light: 'bg-emerald-50', border: 'border-emerald-200' }
-        };
-
-        const iconMap = {
-            History: React.createElement(Landmark, { className: 'w-5 h-5 text-amber-600' }),
-            Music: React.createElement(Music, { className: 'w-5 h-5 text-indigo-600' }),
-            Art: React.createElement(Palette, { className: 'w-5 h-5 text-emerald-600' })
-        };
-
-        function HistoryMatrixApp() {
-            const [filter, setFilter] = useState('All');
-            const [searchTerm, setSearchTerm] = useState('');
-            const [expandedItems, setExpandedItems] = useState(new Set());
-            const [showCheatSheet, setShowCheatSheet] = useState(false);
-
-            const processedList = useMemo(() => {
-                return sortedData.filter(item => {
-                    const matchesFilter = filter === 'All' || item.category === filter;
-                    const s = searchTerm.toLowerCase();
-                    const matchesSearch = !s ||
-                        item.title.toLowerCase().includes(s) ||
-                        item.creator.toLowerCase().includes(s) ||
-                        item.shortDesc.toLowerCase().includes(s) ||
-                        item.context.toLowerCase().includes(s) ||
-                        item.location.toLowerCase().includes(s);
-                    return matchesFilter && matchesSearch;
-                });
-            }, [filter, searchTerm]);
-
-            const groupedTimeline = useMemo(() => {
-                const groups = {};
-                processedList.forEach(item => {
-                    const decade = Math.floor(item.sortYear / 10) * 10;
-                    const label = `${decade}s`;
-                    if (!groups[label]) groups[label] = [];
-                    groups[label].push(item);
-                });
-                return groups;
-            }, [processedList]);
-
-            const toggleExpand = (id) => {
-                setExpandedItems(prev => {
-                    const next = new Set(prev);
-                    if (next.has(id)) next.delete(id); else next.add(id);
-                    return next;
-                });
-            };
-
-            const expandAll = () => setExpandedItems(new Set(processedList.map(i => i.id)));
-            const collapseAll = () => setExpandedItems(new Set());
-
-            const scrollToDecade = (decade) => {
-                const el = document.getElementById(`hm-decade-${decade}`);
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            };
-
-            const formatDetails = (text) => {
-                return text.split('\n').map((line, i) => {
-                    if (line.trim().startsWith('•')) {
-                        return React.createElement('li', { key: i, className: 'ml-5 list-disc mb-2 pl-2 text-slate-700 leading-relaxed font-medium' }, line.replace('•', '').trim());
-                    }
-                    return React.createElement('p', { key: i, className: 'mb-4 text-slate-700 leading-relaxed font-medium' }, line);
-                });
-            };
-
-            return React.createElement('div', { className: 'min-h-full bg-[#EEF2F6] text-slate-800 flex flex-col', style: { fontFamily: 'Manrope, sans-serif' } },
-                // Header
-                React.createElement('header', { className: 'flex-shrink-0 bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-3 z-40 shadow-sm' },
-                    React.createElement('div', { className: 'flex items-center gap-3' },
-                        React.createElement('div', { className: 'bg-slate-900 p-2 rounded-lg shadow-inner' },
-                            React.createElement(Globe, { className: 'w-6 h-6 text-indigo-400' })
-                        ),
-                        React.createElement('div', null,
-                            React.createElement('h1', { className: 'text-xl font-black text-slate-900 tracking-tight', style: { fontFamily: 'Georgia, serif' } }, 'Geo-Historical Matrix'),
-                            React.createElement('p', { className: 'text-xs text-slate-500 font-bold uppercase tracking-widest' }, 'Unit 8')
-                        )
-                    ),
-                    React.createElement('div', { className: 'flex items-center gap-3 flex-wrap' },
-                        React.createElement('div', { className: 'relative' },
-                            React.createElement(Search, { className: 'absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4' }),
-                            React.createElement('input', { type: 'text', placeholder: 'Search events, locations, terms...', value: searchTerm, onChange: e => setSearchTerm(e.target.value), className: 'pl-9 pr-4 py-2 bg-slate-100 border border-slate-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all', style: { minWidth: 220 } })
-                        ),
-                        React.createElement('div', { className: 'flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200' },
-                            ['All', 'History', 'Music', 'Art'].map(cat =>
-                                React.createElement('button', { key: cat, onClick: () => setFilter(cat), className: `px-3 py-1.5 rounded-md text-sm font-bold transition-all ${filter === cat ? 'bg-white text-slate-900 shadow ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}` }, cat)
-                            )
-                        ),
-                        React.createElement('button', { onClick: () => setShowCheatSheet(true), className: 'flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-indigo-700 transition-colors' },
-                            React.createElement(Layers, { className: 'w-4 h-4' }), ' Cheat Sheets'
-                        )
-                    )
-                ),
-                // Main
-                React.createElement('div', { className: 'flex flex-grow overflow-hidden' },
-                    // Timeline
-                    React.createElement('div', { className: 'flex-grow overflow-y-auto px-4 md:px-10 py-6 no-scrollbar', id: 'hm-timeline' },
-                        React.createElement('div', { className: 'max-w-4xl mx-auto relative' },
-                            // Expand/Collapse controls
-                            React.createElement('div', { className: 'flex justify-end gap-2 mb-5' },
-                                React.createElement('div', { className: 'flex bg-white border border-slate-200 rounded-lg shadow-sm p-1' },
-                                    React.createElement('button', { onClick: expandAll, className: 'flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-md transition-colors' },
-                                        React.createElement(Maximize2, { className: 'w-3.5 h-3.5' }), ' Expand All'
-                                    ),
-                                    React.createElement('div', { className: 'w-px bg-slate-200 my-1 mx-1' }),
-                                    React.createElement('button', { onClick: collapseAll, className: 'flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-md transition-colors' },
-                                        React.createElement(Minimize2, { className: 'w-3.5 h-3.5' }), ' Collapse All'
-                                    )
-                                )
-                            ),
-                            // Central axis line
-                            React.createElement('div', { className: 'absolute left-7 md:left-12 top-10 bottom-10 w-1 bg-slate-200 rounded-full z-0' }),
-                            // Timeline content
-                            Object.keys(groupedTimeline).length === 0
-                                ? React.createElement('div', { className: 'text-center py-20 text-slate-400 font-medium text-lg' }, 'No events found matching your criteria.')
-                                : Object.entries(groupedTimeline).map(([decade, items]) =>
-                                    React.createElement('div', { key: decade, id: `hm-decade-${decade}`, className: 'mb-12 relative z-10' },
-                                        // Decade marker
-                                        React.createElement('div', { className: 'sticky top-0 z-20 flex items-center mb-6' },
-                                            React.createElement('div', { className: 'bg-slate-800 text-white font-black text-lg px-5 py-2 rounded-xl shadow-lg border-2 border-slate-600 ml-0 md:ml-2 flex items-center gap-2' },
-                                                React.createElement(Clock, { className: 'w-4 h-4 text-slate-400' }), ` ${decade}`
-                                            )
-                                        ),
-                                        // Items
-                                        React.createElement('div', { className: 'space-y-6' },
-                                            items.map(item => {
-                                                const isExpanded = expandedItems.has(item.id);
-                                                const style = categoryStyles[item.category];
-                                                return React.createElement('div', { key: item.id, className: 'relative pl-14 md:pl-24 group' },
-                                                    // Node dot
-                                                    React.createElement('div', { className: `absolute left-5 md:left-10 top-6 w-4 h-4 rounded-full border-[3px] border-[#EEF2F6] shadow-md z-10 transition-transform duration-300 ${style.bg} ${isExpanded ? 'scale-150' : 'group-hover:scale-125'}` }),
-                                                    // Card
-                                                    React.createElement('div', { className: `bg-white rounded-2xl border transition-all duration-300 overflow-hidden shadow-sm ${isExpanded ? 'border-slate-300 shadow-xl' : 'border-slate-200 cursor-pointer hover:border-slate-300 hover:shadow-md'}` },
-                                                        // Card header (click to expand)
-                                                        React.createElement('div', { className: 'p-4 md:p-5', onClick: () => toggleExpand(item.id) },
-                                                            React.createElement('div', { className: 'flex flex-wrap items-center gap-2 mb-2' },
-                                                                React.createElement('span', { className: `flex items-center gap-1.5 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-md bg-white border shadow-sm ${style.text} ${style.border}` },
-                                                                    iconMap[item.category], ` ${item.category}`
-                                                                ),
-                                                                React.createElement('span', { className: 'text-sm font-black text-slate-700 bg-slate-100 px-3 py-1 rounded-md border border-slate-200' }, item.year),
-                                                                React.createElement('span', { className: 'flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-50 px-3 py-1 rounded-md border border-slate-100' },
-                                                                    React.createElement(MapPin, { className: 'w-3.5 h-3.5 text-rose-500' }), ` ${item.location}`
-                                                                )
-                                                            ),
-                                                            React.createElement('h3', { className: 'text-xl md:text-2xl font-black text-slate-900 leading-tight mb-1', style: { fontFamily: 'Georgia, serif' } }, item.title),
-                                                            React.createElement('div', { className: 'flex items-center gap-2 text-sm font-bold text-slate-500 mb-2' },
-                                                                React.createElement(BookOpen, { className: 'w-4 h-4' }), ` ${item.creator}`
-                                                            ),
-                                                            React.createElement('div', { className: 'flex items-center justify-between' },
-                                                                React.createElement('p', { className: `text-sm font-semibold ${isExpanded ? 'text-slate-800' : 'text-slate-600'}` }, item.shortDesc),
-                                                                React.createElement('div', { className: `p-1.5 rounded-full border transition-all duration-300 ml-3 flex-shrink-0 ${isExpanded ? 'bg-slate-900 text-white border-slate-900 rotate-180' : 'bg-white text-slate-400 border-slate-200'}` },
-                                                                    React.createElement(ChevronDown, { className: 'w-4 h-4' })
-                                                                )
-                                                            )
-                                                        ),
-                                                        // Collapsible details
-                                                        isExpanded && React.createElement('div', { className: 'p-5 md:p-6 bg-slate-50 border-t border-slate-200' },
-                                                            React.createElement('div', { className: 'grid md:grid-cols-12 gap-6' },
-                                                                React.createElement('div', { className: 'md:col-span-5' },
-                                                                    React.createElement('div', { className: 'bg-white p-4 rounded-xl border border-slate-200 shadow-sm' },
-                                                                        React.createElement('h4', { className: 'flex items-center gap-2 text-xs font-black text-slate-900 uppercase tracking-widest mb-2 border-b border-slate-100 pb-2' },
-                                                                            React.createElement(Globe, { className: 'w-4 h-4 text-indigo-500' }), ' Geopolitical Context'
-                                                                        ),
-                                                                        React.createElement('p', { className: 'text-sm text-slate-700 leading-relaxed font-medium' }, item.context)
-                                                                    )
-                                                                ),
-                                                                React.createElement('div', { className: 'md:col-span-7' },
-                                                                    React.createElement('h4', { className: 'flex items-center gap-2 text-xs font-black text-slate-900 uppercase tracking-widest mb-3' },
-                                                                        React.createElement(BookOpen, { className: 'w-4 h-4 text-emerald-500' }), ' Historical Analysis'
-                                                                    ),
-                                                                    React.createElement('div', { className: 'text-sm text-slate-800 leading-relaxed' }, formatDetails(item.details))
-                                                                )
-                                                            ),
-                                                            React.createElement('div', { className: 'mt-6 flex flex-wrap gap-2 pt-4 border-t border-slate-200' },
-                                                                item.tags.map(tag =>
-                                                                    React.createElement('span', { key: tag, className: 'bg-white border border-slate-300 text-slate-700 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider shadow-sm' }, `#${tag}`)
-                                                                )
-                                                            )
-                                                        )
-                                                    )
-                                                );
-                                            })
-                                        )
-                                    )
-                                )
-                        )
-                    ),
-                    // Right minimap
-                    React.createElement('div', { className: 'hidden xl:flex w-48 bg-white border-l border-slate-200 flex-col py-6 px-4 z-10 shadow-lg' },
-                        React.createElement('h3', { className: 'text-xs font-black text-slate-400 uppercase tracking-widest mb-4' }, 'Timeline Jump'),
-                        React.createElement('div', { className: 'space-y-1 border-l-2 border-slate-100 pl-3 relative' },
-                            Object.keys(groupedTimeline).map(decade =>
-                                React.createElement('button', { key: decade, onClick: () => scrollToDecade(decade), className: 'w-full text-left py-1.5 text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors flex items-center gap-3 group relative' },
-                                    React.createElement('div', { className: 'absolute -left-[19px] w-2 h-2 rounded-full bg-slate-300 group-hover:bg-indigo-500 transition-colors border-2 border-white' }),
-                                    decade
-                                )
-                            )
-                        )
-                    )
-                ),
-                // Cheat Sheet Overlay
-                showCheatSheet && React.createElement('div', { className: 'fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50', onClick: () => setShowCheatSheet(false) },
-                    React.createElement('div', { className: 'absolute right-0 top-0 bottom-0 w-full md:w-[600px] bg-[#F4F6F8] shadow-2xl flex flex-col overflow-hidden', onClick: e => e.stopPropagation() },
-                        // Cheat sheet header
-                        React.createElement('div', { className: 'flex items-center justify-between p-5 border-b border-slate-200 bg-white' },
-                            React.createElement('h2', { className: 'text-xl font-black text-slate-900 flex items-center gap-3', style: { fontFamily: 'Georgia, serif' } },
-                                React.createElement(Layers, { className: 'w-6 h-6 text-indigo-600' }), ' Executive Cheat Sheets'
-                            ),
-                            React.createElement('button', { onClick: () => setShowCheatSheet(false), className: 'p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors' },
-                                React.createElement(XIcon, { className: 'w-5 h-5' })
-                            )
-                        ),
-                        // Cheat sheet body
-                        React.createElement('div', { className: 'flex-grow overflow-y-auto p-5 space-y-6' },
-                            // MEAN NURSE
-                            React.createElement('div', { className: 'bg-white rounded-2xl p-5 shadow-md border-t-4 border-rose-600' },
-                                React.createElement('div', { className: 'flex items-center gap-3 mb-2' },
-                                    React.createElement(ShieldAlert, { className: 'w-5 h-5 text-rose-600' }),
-                                    React.createElement('h3', { className: 'text-lg font-black text-slate-900', style: { fontFamily: 'Georgia, serif' } }, 'The "MEAN NURSE" Mnemonic')
-                                ),
-                                React.createElement('p', { className: 'text-xs text-slate-500 font-bold mb-4 pb-3 border-b border-slate-100' }, 'Core motives & effects of 19th Century Imperialism / European Tension'),
-                                React.createElement('div', { className: 'grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3 text-sm' },
-                                    [
-                                        ['M','rose','arkets & Materials:','Need for raw goods/captive buyers (Industrial Rev).'],
-                                        ['E','rose','mpire Building:','Global status and competition among European nations.'],
-                                        ['A','rose','lliances & Arms:','Militarism and secret treaties dividing Europe.'],
-                                        ['N','rose','ationalism:','Extreme national pride; proving "survival of the fittest".'],
-                                        ['N','indigo','aval Bases:','Need for global coaling stations for military fleets.'],
-                                        ['U','indigo','nification:','Italy & Germany united, upsetting the balance of power.'],
-                                        ['R','indigo','acism & Religion:','Social Darwinism and pushing missionaries onto locals.'],
-                                        ['S','indigo','cramble for Africa:','The Berlin Conference dividing the continent.'],
-                                        ['E','indigo','thnocentrism:','"The White Man\'s Burden" / believing they are \'civilizing\'.'],
-                                    ].map(([letter, color, rest, desc]) =>
-                                        React.createElement('div', { key: letter+rest, className: 'flex gap-3' },
-                                            React.createElement('span', { className: `font-black text-${color}-600 text-lg w-4 flex-shrink-0` }, letter),
-                                            React.createElement('div', null,
-                                                React.createElement('strong', { className: 'text-slate-900' }, rest), ` ${desc}`
-                                            )
-                                        )
-                                    )
-                                ),
-                                React.createElement('div', { className: 'mt-4 pt-3 border-t border-slate-100 bg-slate-50 p-3 rounded-lg text-xs text-slate-600 font-medium' },
-                                    '*Note: Medical advances (like Quinine for malaria) drastically improved military survival, allowing deeper penetration into Africa.*'
-                                )
-                            ),
-                            // MOTHFART
-                            React.createElement('div', { className: 'bg-white rounded-2xl p-5 shadow-md border-t-4 border-indigo-600' },
-                                React.createElement('div', { className: 'flex items-center gap-3 mb-2' },
-                                    React.createElement(Volume2, { className: 'w-5 h-5 text-indigo-600' }),
-                                    React.createElement('h3', { className: 'text-lg font-black text-slate-900', style: { fontFamily: 'Georgia, serif' } }, 'Musicology: MOTHFART')
-                                ),
-                                React.createElement('p', { className: 'text-sm font-bold text-indigo-700 bg-indigo-50 p-3 rounded-xl border border-indigo-100 mb-4 text-center' },
-                                    'Observation (Who/What/When) • Interpretation (Why) • Analysis (How)'
-                                ),
-                                React.createElement('div', { className: 'grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3 text-sm text-slate-700' },
-                                    [['M','elody:','Main tune. Who carries it?'],['O','rchestration:','Who plays what/when.'],['T','empo:','How slow/fast (heartbeat).'],['H','armony:','Supporting sounds (dissonance/consonance).'],['F','orm:','Structure (Through-composed/strophic).'],['A','mplitude:','Loudness (Crescendo).'],['R','hythm:','Pattern of beats/notes.'],['T','exture:','Layers of sound.']].map(([l, r, d]) =>
-                                        React.createElement('div', { key: l+r, className: 'flex gap-3' },
-                                            React.createElement('span', { className: 'font-black text-slate-900 text-lg w-4 flex-shrink-0' }, l),
-                                            React.createElement('div', null, React.createElement('strong', { className: 'text-slate-900' }, r), ` ${d}`)
-                                        )
-                                    )
-                                )
-                            ),
-                            // Map Quiz
-                            React.createElement('div', { className: 'bg-slate-900 rounded-2xl p-5 shadow-xl text-white border-t-4 border-sky-400' },
-                                React.createElement('div', { className: 'flex items-center gap-3 mb-5 border-b border-slate-700 pb-3' },
-                                    React.createElement(Crosshair, { className: 'w-5 h-5 text-sky-400' }),
-                                    React.createElement('h3', { className: 'text-lg font-black', style: { fontFamily: 'Georgia, serif' } }, 'Map Quiz Targets')
-                                ),
-                                React.createElement('div', { className: 'grid grid-cols-2 gap-3 text-sm font-bold' },
-                                    [['bg-sky-400','India'],['bg-emerald-400','Italy'],['bg-rose-400','China'],['bg-amber-400','Germany']].map(([color, name]) =>
-                                        React.createElement('div', { key: name, className: 'flex items-center gap-3 bg-slate-800 p-3 rounded-xl border border-slate-700' },
-                                            React.createElement('div', { className: `w-3 h-3 rounded-full ${color}` }),
-                                            name
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            );
-        }
-
-        // Render when the matrix tab panel exists in the DOM
-        const container = document.getElementById('history-matrix-root');
-        if (container) {
-            const root = ReactDOM.createRoot(container);
-            root.render(React.createElement(HistoryMatrixApp));
-        }
-    })();
-    </script>
-<!-- AdSense Ad -->
-<div style="max-width: 728px; margin: 12px auto; padding: 0 16px; text-align: center; min-height: 0; overflow: hidden;">
-    <ins class="adsbygoogle"
-         style="display:block"
-         data-ad-client="ca-pub-7185308952264759"
-         data-ad-slot="9823377750"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
-    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-</div>
-
 </body>
 </html>
