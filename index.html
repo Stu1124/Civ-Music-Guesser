@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Civ Music Guesser – Unit 8</title>
     <meta name="description" content="Interactive music history listening lab. Guess the genre of each piece, then reveal composer, context, and key characteristics.">
+    <meta name="theme-color" content="#08090c">
+    <meta name="apple-mobile-web-app-title" content="Civ Music">
+    <link rel="icon" type="image/svg+xml" href="assets/app-icon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/app-icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@1.11.0/dist/umd/lucide.min.js"></script>
     <style>
@@ -82,6 +88,21 @@
             min-width: 0;
         }
 
+        .brand-lockup {
+            display: flex;
+            min-width: 0;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-mark {
+            width: clamp(42px, 5vw, 54px);
+            height: clamp(42px, 5vw, 54px);
+            flex: 0 0 auto;
+            border-radius: 14px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+        }
+
         .eyebrow,
         .kicker {
             margin: 0;
@@ -147,6 +168,7 @@
             gap: 8px;
             border-radius: 8px;
             padding: 0 14px;
+            text-decoration: none;
             transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
         }
 
@@ -1041,6 +1063,10 @@
                 align-items: stretch;
             }
 
+            .brand-lockup {
+                align-items: center;
+            }
+
             .status-cluster {
                 justify-content: flex-start;
             }
@@ -1098,12 +1124,19 @@
     <main class="app-shell">
         <div class="app-frame">
             <header class="topbar">
-                <div class="brand-block">
-                    <p class="eyebrow">Unit 8</p>
-                    <h1 id="quiz-title">Civ Music Guesser</h1>
+                <div class="brand-lockup">
+                    <img class="app-mark" src="assets/app-icon.svg" alt="" aria-hidden="true">
+                    <div class="brand-block">
+                        <p class="eyebrow">Unit 8</p>
+                        <h1 id="quiz-title">Civ Music Guesser</h1>
+                    </div>
                 </div>
                 <div class="status-cluster">
                     <span id="content-status" class="status-pill status-warn">Fallback content</span>
+                    <a class="floating-button" href="https://docs.google.com/forms/d/e/1FAIpQLSfIPFJHt9kfxEmOeBaGkJbDxSkg6hfNzxQ-G9FDIf_MB9HP8Q/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" title="Advertisement Form" aria-label="Advertisement Form">
+                        <i data-lucide="megaphone" aria-hidden="true"></i>
+                        <span class="floating-label">Advertisement Form</span>
+                    </a>
                     <div id="mini-leaderboard-launcher" class="leaderboard-launcher">
                         <button onclick="setMiniLeaderboardOpen(!isMiniLeaderboardOpen)" class="floating-button" title="Leaderboard" aria-label="Leaderboard">
                             <i data-lucide="trophy" aria-hidden="true"></i>

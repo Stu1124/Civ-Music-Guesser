@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Civ Music Guesser icon</title>
+  <desc id="desc">A minimal teal globe formed from music staff curves and notes.</desc>
+  <defs>
+    <linearGradient id="bg" x1="80" y1="64" x2="432" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#177a73"/>
+      <stop offset="1" stop-color="#0b4d4d"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <g fill="none" stroke="#f4efe4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M138 176c36-56 104-86 174-70 35 8 65 27 87 54" stroke-width="17"/>
+    <path d="M128 326c26 63 95 98 164 82 43-10 80-37 104-75" stroke-width="17"/>
+    <path d="M132 183c62 24 150 32 264-6" stroke-width="16"/>
+    <path d="M119 245c70 28 169 34 284-8" stroke-width="16"/>
+    <path d="M134 313c73 25 163 22 253-17" stroke-width="16"/>
+    <path d="M218 120c-21 72-22 170-3 256" stroke-width="14" opacity=".82"/>
+  </g>
+  <g fill="#f4efe4">
+    <ellipse cx="194" cy="305" rx="22" ry="15" transform="rotate(-26 194 305)"/>
+    <rect x="211" y="214" width="13" height="92" rx="6"/>
+    <ellipse cx="324" cy="222" rx="22" ry="15" transform="rotate(-26 324 222)"/>
+    <rect x="341" y="128" width="13" height="94" rx="6"/>
+    <path d="M348 130c24 12 42 30 51 52-20-7-35-19-51-35z"/>
+  </g>
+</svg>
