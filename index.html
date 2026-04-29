@@ -1329,11 +1329,16 @@
 
     <script>
         // --- DATA CONFIG ---
-        // Publish your Google Sheet tabs as CSV and paste links below.
+        // Songs are read directly from the spreadsheet via the Apps Script web
+        // app, which is the only path that returns CORS-permissive responses
+        // from a browser context. Google's docs.google.com CSV / gviz / export
+        // endpoints all block cross-origin reads, so this is the path that
+        // actually delivers live content. The Apps Script's `?action=tracks`
+        // handler reads the configured Unit tab and returns JSON.
         const USE_REMOTE_DATA = true;
-        const DATA_SOURCE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSxvwv2bZYqhdOEIkK2-EY3UXlyvldhHb5Z_L9DGqwInaEHj_B4kmgVyQyC2gp9ApV1rBgeyaiQVe2c/pub?gid=1719666629&single=true&output=csv';
-        const SETTINGS_SOURCE_URL = '';
         const LEADERBOARD_URL = 'https://script.google.com/macros/s/AKfycbze1jWrLfnyK2zTx-JGEJy8ROuYSA0yagb90AGOUC_NMZWSHyg76KUOxWOK3-9fZIo46A/exec';
+        const DATA_SOURCE_URL = LEADERBOARD_URL + '?action=tracks';
+        const SETTINGS_SOURCE_URL = '';
         const LEADERBOARD_MAX_ROWS = 10;
         const MINI_LEADERBOARD_ROWS = 5;
 
@@ -1524,7 +1529,49 @@
                 throw new Error('DATA_SOURCE_URL is empty.');
             }
 
-            const rows = await fetchRowsFromSource(DATA_SOURCE_URL.trim());
+            const url = DATA_SOURCE_URL.trim();
+
+            // Apps Script tracks endpoint returns JSON in the shape
+            // { tracks: [...] } or { error: '...' }. Everything else is
+            // assumed to be a CSV source for backward compatibility.
+            const isAppsScriptTracks = /script\.google\.com\/macros\//i.test(url)
+                && /[?&]action=tracks\b/i.test(url);
+
+            if (isAppsScriptTracks) {
+                const response = await fetch(url, { cache: 'no-store', redirect: 'follow' });
+                if (!response.ok) {
+                    throw new Error(`Apps Script request failed with status ${response.status}.`);
+                }
+                const json = await response.json();
+                if (json && json.error) {
+                    throw new Error(`Apps Script error: ${json.error}`);
+                }
+                if (!json || !Array.isArray(json.tracks) || json.tracks.length === 0) {
+                    throw new Error('No valid enabled tracks were returned by the Apps Script.');
+                }
+                // Apps Script returns rows already normalized; still run them
+                // through normalizeTrack so any future schema drift gets fixed
+                // in one place.
+                const tracks = json.tracks.map((t) => ({
+                    genre: (t.genre || '').toString().trim(),
+                    title: (t.title || '').toString().trim(),
+                    composer: (t.composer || '').toString().trim(),
+                    characteristics: (t.characteristics || '').toString().trim(),
+                    context: (t.context || 'Not provided').toString().trim() || 'Not provided',
+                    link: (t.link || '').toString().trim(),
+                    altGenres: Array.isArray(t.altGenres)
+                        ? t.altGenres.map((s) => String(s).trim()).filter(Boolean)
+                        : String(t.alt_genres || t.alt_genre || '')
+                            .split('|')
+                            .map((s) => s.trim())
+                            .filter(Boolean)
+                }));
+                return { tracks, warnings: [], source: 'live' };
+            }
+
+            // Legacy CSV path (currently unreachable from the deployed config,
+            // kept for local testing or if a publishable CSV source is added).
+            const rows = await fetchRowsFromSource(url);
             const warnings = [];
             const tracks = [];
 
