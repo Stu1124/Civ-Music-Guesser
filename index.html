@@ -155,33 +155,83 @@
             color: #f0ce84;
         }
 
-        .unit-select {
-            min-height: 32px;
+        .header-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .unit-switcher {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px;
             border: 1px solid var(--line-strong);
             border-radius: 999px;
-            padding: 0 28px 0 12px;
-            background-color: rgba(17, 24, 32, 0.86);
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236f7884' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
+            background: rgba(17, 24, 32, 0.86);
+            max-width: 100%;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .unit-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            border-radius: 999px;
+            padding: 6px 14px;
+            background: transparent;
             color: var(--muted);
-            font-size: 0.76rem;
-            font-weight: 800;
             font-family: inherit;
-            white-space: nowrap;
+            font-size: 0.74rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
             cursor: pointer;
-            appearance: none;
-            -webkit-appearance: none;
+            white-space: nowrap;
+            transition: background 160ms ease, color 160ms ease, transform 160ms ease;
         }
 
-        .unit-select:focus {
-            outline: none;
-            border-color: var(--brand);
-        }
-
-        .unit-select option {
-            background: #10161d;
+        .unit-pill:hover:not(.is-active):not(:disabled) {
             color: var(--text);
+            background: rgba(40, 182, 164, 0.10);
+        }
+
+        .unit-pill.is-active {
+            background: var(--brand);
+            color: #06110f;
+        }
+
+        .unit-pill:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        .mode-badge-sub {
+            min-height: 26px;
+            padding: 0 10px;
+            font-size: 0.68rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 720px) {
+            .header-controls {
+                align-items: stretch;
+                width: 100%;
+            }
+
+            .unit-switcher {
+                width: 100%;
+                justify-content: stretch;
+            }
+
+            .unit-pill {
+                flex: 1 1 0;
+                padding: 6px 8px;
+            }
         }
 
         .btn-primary,
@@ -1161,7 +1211,6 @@
                     </div>
                 </div>
                 <div class="status-cluster">
-                    <select id="unit-select" class="unit-select" onchange="switchUnit(this.value)" title="Switch unit" aria-label="Switch unit" style="display:none"></select>
                     <button onclick="restartQuiz()" class="floating-button" title="Restart Quiz" aria-label="Restart Quiz">
                         <i data-lucide="rotate-ccw" aria-hidden="true"></i>
                         <span class="floating-label">Restart</span>
@@ -1187,7 +1236,10 @@
                             <p class="kicker">Listen</p>
                             <h2 id="listen-heading" class="panel-title">Track <span id="current-count">1</span> of <span id="total-count">0</span></h2>
                         </div>
-                        <div id="mode-badge" class="mode-badge">Full Quiz</div>
+                        <div class="header-controls">
+                            <div id="unit-switcher" class="unit-switcher" role="tablist" aria-label="Switch unit"></div>
+                            <div id="mode-badge" class="mode-badge mode-badge-sub">Full Quiz</div>
+                        </div>
                     </div>
 
                     <div id="media-container" class="media-stage">
@@ -2468,18 +2520,40 @@
         ];
 
         function populateUnitSwitcher(sheets, selectedName) {
-            const select = document.getElementById('unit-select');
-            if (!select) return;
+            const container = document.getElementById('unit-switcher');
+            if (!container) return;
             const list = (sheets && sheets.length > 0) ? sheets : FALLBACK_UNIT_LIST;
-            select.innerHTML = '';
+            container.innerHTML = '';
             list.forEach((s) => {
-                const opt = document.createElement('option');
-                opt.value = s.name;
-                opt.textContent = s.name;
-                if (s.name === selectedName) opt.selected = true;
-                select.appendChild(opt);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'unit-pill';
+                btn.textContent = s.name;
+                btn.dataset.unit = s.name;
+                btn.setAttribute('role', 'tab');
+                btn.setAttribute('aria-selected', s.name === selectedName ? 'true' : 'false');
+                if (s.name === selectedName) btn.classList.add('is-active');
+                btn.addEventListener('click', () => switchUnit(s.name));
+                container.appendChild(btn);
             });
-            select.style.display = '';
+        }
+
+        function setActiveUnitPill(name) {
+            const container = document.getElementById('unit-switcher');
+            if (!container) return;
+            container.querySelectorAll('.unit-pill').forEach((btn) => {
+                const isActive = btn.dataset.unit === name;
+                btn.classList.toggle('is-active', isActive);
+                btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+        }
+
+        function setUnitSwitcherBusy(busy) {
+            const container = document.getElementById('unit-switcher');
+            if (!container) return;
+            container.querySelectorAll('.unit-pill').forEach((btn) => {
+                btn.disabled = !!busy;
+            });
         }
 
         function updateEyebrow(sheetName) {
@@ -2530,6 +2604,7 @@
 
             currentSheetName = sheetName;
             updateEyebrow(sheetName);
+            setActiveUnitPill(sheetName);
 
             // Refresh the per-unit leaderboard regardless of cache state.
             refreshLeaderboard();
@@ -2537,11 +2612,12 @@
             // If we've already loaded this unit before, restore where the user left off.
             if (unitStates[sheetName]) {
                 restoreUnitState(unitStates[sheetName]);
-                setContentStatus(loadedQuizData === fallbackQuizData ? 'fallback' : 'live');
+                setContentStatus('live');
                 return;
             }
 
             // First visit: fetch tracks and start a fresh quiz for this unit.
+            setUnitSwitcherBusy(true);
             try {
                 const quizData = await fetchQuizData(sheetName);
                 loadedQuizData = quizData.tracks.length > 0 ? quizData.tracks : [...fallbackQuizData];
@@ -2553,6 +2629,8 @@
                 loadedQuizData = [...fallbackQuizData];
                 setContentStatus('fallback');
                 showToast(`Could not load ${sheetName}. Using fallback content.`);
+            } finally {
+                setUnitSwitcherBusy(false);
             }
             initApp();
             snapshotCurrentUnit();
