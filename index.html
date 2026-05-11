@@ -155,6 +155,35 @@
             color: #f0ce84;
         }
 
+        .unit-select {
+            min-height: 32px;
+            border: 1px solid var(--line-strong);
+            border-radius: 999px;
+            padding: 0 28px 0 12px;
+            background-color: rgba(17, 24, 32, 0.86);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236f7884' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 800;
+            font-family: inherit;
+            white-space: nowrap;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .unit-select:focus {
+            outline: none;
+            border-color: var(--brand);
+        }
+
+        .unit-select option {
+            background: #10161d;
+            color: var(--text);
+        }
+
         .btn-primary,
         .btn-soft,
         .btn-secondary,
@@ -1132,6 +1161,7 @@
                     </div>
                 </div>
                 <div class="status-cluster">
+                    <select id="unit-select" class="unit-select" onchange="switchUnit(this.value)" title="Switch unit" aria-label="Switch unit" style="display:none"></select>
                     <span id="content-status" class="status-pill status-warn">Fallback content</span>
                     <a class="floating-button" href="https://docs.google.com/forms/d/e/1FAIpQLSfIPFJHt9kfxEmOeBaGkJbDxSkg6hfNzxQ-G9FDIf_MB9HP8Q/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" title="Advertisement Form" aria-label="Advertisement Form">
                         <i data-lucide="megaphone" aria-hidden="true"></i>
@@ -1413,6 +1443,7 @@
         let isMiniLeaderboardOpen = false;
         let isFullLeaderboardOpen = false;
         let cachedLeaderboardEntries = [];
+        let currentSheetName = null;
 
         // Shuffle Array
         function shuffle(array) {
@@ -1554,7 +1585,7 @@
             return parseCsv(text);
         }
 
-        async function fetchQuizData() {
+        async function fetchQuizData(sheetName) {
             if (!USE_REMOTE_DATA) {
                 return { tracks: [...fallbackQuizData], warnings: [], source: 'fallback' };
             }
@@ -1562,7 +1593,10 @@
                 throw new Error('DATA_SOURCE_URL is empty.');
             }
 
-            const url = DATA_SOURCE_URL.trim();
+            let url = DATA_SOURCE_URL.trim();
+            if (sheetName) {
+                url += '&sheet=' + encodeURIComponent(sheetName);
+            }
 
             // Apps Script tracks endpoint returns JSON in the shape
             // { tracks: [...] } or { error: '...' }. Everything else is
@@ -1848,7 +1882,8 @@
 
             try {
                 setLeaderboardStatus('Loading leaderboard...');
-                const response = await fetch(LEADERBOARD_URL.trim(), { cache: 'no-store' });
+                const lbUrl = LEADERBOARD_URL.trim() + (currentSheetName ? '?sheet=' + encodeURIComponent(currentSheetName) : '');
+                const response = await fetch(lbUrl, { cache: 'no-store' });
                 if (!response.ok) {
                     throw new Error(`Leaderboard fetch failed (${response.status}).`);
                 }
@@ -1929,7 +1964,8 @@
                 nickname: name.slice(0, 24),
                 accuracy: runSummary.accuracy,
                 totalQuestions: runSummary.totalQuestions,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                sheet: currentSheetName || ''
             };
 
             const button = document.getElementById('leaderboard-submit-btn');
@@ -2404,6 +2440,52 @@
             initIcons();
         }
 
+        async function fetchAvailableSheets() {
+            const response = await fetch(LEADERBOARD_URL + '?action=sheets', { cache: 'no-store', redirect: 'follow' });
+            if (!response.ok) throw new Error('Failed to fetch sheet list');
+            const json = await response.json();
+            if (json && json.error) throw new Error(json.error);
+            return Array.isArray(json.sheets) ? json.sheets : [];
+        }
+
+        function populateUnitSwitcher(sheets, selectedName) {
+            const select = document.getElementById('unit-select');
+            if (!select) return;
+            select.innerHTML = '';
+            sheets.forEach((s) => {
+                const opt = document.createElement('option');
+                opt.value = s.name;
+                opt.textContent = s.name;
+                if (s.name === selectedName) opt.selected = true;
+                select.appendChild(opt);
+            });
+            select.style.display = sheets.length > 1 ? '' : 'none';
+        }
+
+        function updateEyebrow(sheetName) {
+            const el = document.querySelector('.eyebrow');
+            if (el && sheetName) el.textContent = sheetName;
+        }
+
+        async function switchUnit(sheetName) {
+            if (!sheetName || sheetName === currentSheetName) return;
+            currentSheetName = sheetName;
+            updateEyebrow(sheetName);
+            try {
+                const quizData = await fetchQuizData(sheetName);
+                loadedQuizData = quizData.tracks.length > 0 ? quizData.tracks : [...fallbackQuizData];
+                setContentStatus(quizData.tracks.length > 0 ? 'live' : 'fallback');
+                if (quizData.warnings.length > 0) {
+                    showToast(`${quizData.warnings.length} row${quizData.warnings.length === 1 ? '' : 's'} skipped in ${sheetName}.`);
+                }
+            } catch (_) {
+                loadedQuizData = [...fallbackQuizData];
+                setContentStatus('fallback');
+                showToast(`Could not load ${sheetName}. Using fallback content.`);
+            }
+            initApp();
+        }
+
         async function bootstrapApp() {
             let usedFallback = false;
             let skippedRowCount = 0;
@@ -2412,14 +2494,25 @@
                 showToast('Open via http://localhost (not file://) to avoid CORS errors.');
             }
 
+            let availableSheets = [];
+            let initialSheet = null;
+
+            if (USE_REMOTE_DATA) {
+                try {
+                    availableSheets = await fetchAvailableSheets();
+                    if (availableSheets.length > 0) initialSheet = availableSheets[0].name;
+                } catch (_) {}
+            }
+
             if (USE_REMOTE_DATA) {
                 try {
                     const [quizData, settings] = await Promise.all([
-                        fetchQuizData(),
+                        fetchQuizData(initialSheet),
                         fetchSettings().catch(() => ({}))
                     ]);
                     loadedQuizData = quizData.tracks;
                     skippedRowCount = quizData.warnings.length;
+                    currentSheetName = initialSheet;
                     applySettings(settings);
                 } catch (err) {
                     usedFallback = true;
@@ -2436,6 +2529,8 @@
             }
 
             setContentStatus(usedFallback ? 'fallback' : 'live');
+            populateUnitSwitcher(availableSheets, currentSheetName);
+            updateEyebrow(currentSheetName);
             initApp();
             refreshLeaderboard();
 
