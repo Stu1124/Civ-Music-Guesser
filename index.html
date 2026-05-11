@@ -1162,6 +1162,10 @@
                 </div>
                 <div class="status-cluster">
                     <select id="unit-select" class="unit-select" onchange="switchUnit(this.value)" title="Switch unit" aria-label="Switch unit" style="display:none"></select>
+                    <button onclick="restartQuiz()" class="floating-button" title="Restart Quiz" aria-label="Restart Quiz">
+                        <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+                        <span class="floating-label">Restart</span>
+                    </button>
                     <span id="content-status" class="status-pill status-warn">Fallback content</span>
                     <a class="floating-button" href="https://docs.google.com/forms/d/e/1FAIpQLSfIPFJHt9kfxEmOeBaGkJbDxSkg6hfNzxQ-G9FDIf_MB9HP8Q/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" title="Advertisement Form" aria-label="Advertisement Form">
                         <i data-lucide="megaphone" aria-hidden="true"></i>
@@ -1444,6 +1448,8 @@
         let isFullLeaderboardOpen = false;
         let cachedLeaderboardEntries = [];
         let currentSheetName = null;
+        // Per-unit quiz state so switching tabs doesn't wipe progress.
+        const unitStates = {};
 
         // Shuffle Array
         function shuffle(array) {
@@ -2429,6 +2435,9 @@
             hideEndQuizModal();
             closeResultsModal();
             initApp();
+            if (currentSheetName) {
+                snapshotCurrentUnit();
+            }
             showToast('Quiz restarted. Scores reset.');
         }
 
@@ -2448,18 +2457,29 @@
             return Array.isArray(json.sheets) ? json.sheets : [];
         }
 
+        // Hardcoded fallback so the switcher always renders even if the Apps
+        // Script ?action=sheets endpoint isn't deployed yet. Once the live
+        // sheets list comes back it replaces this set.
+        const FALLBACK_UNIT_LIST = [
+            { name: 'Unit 5/6' },
+            { name: 'Unit 7' },
+            { name: 'Unit 8' },
+            { name: 'FINAL' }
+        ];
+
         function populateUnitSwitcher(sheets, selectedName) {
             const select = document.getElementById('unit-select');
             if (!select) return;
+            const list = (sheets && sheets.length > 0) ? sheets : FALLBACK_UNIT_LIST;
             select.innerHTML = '';
-            sheets.forEach((s) => {
+            list.forEach((s) => {
                 const opt = document.createElement('option');
                 opt.value = s.name;
                 opt.textContent = s.name;
                 if (s.name === selectedName) opt.selected = true;
                 select.appendChild(opt);
             });
-            select.style.display = sheets.length > 1 ? '' : 'none';
+            select.style.display = '';
         }
 
         function updateEyebrow(sheetName) {
@@ -2467,10 +2487,61 @@
             if (el && sheetName) el.textContent = sheetName;
         }
 
+        function snapshotCurrentUnit() {
+            if (!currentSheetName) return;
+            unitStates[currentSheetName] = {
+                loadedQuizData: [...loadedQuizData],
+                activeQuizData: [...activeQuizData],
+                currentIndex,
+                correctCount,
+                incorrectCount,
+                questionResults: questionResults.map((r) => (r ? { ...r } : null)),
+                roundMode,
+                hasSubmittedCurrentRound,
+                answered,
+                lastUserGuess
+            };
+        }
+
+        function restoreUnitState(state) {
+            loadedQuizData = [...state.loadedQuizData];
+            activeQuizData = [...state.activeQuizData];
+            correctCount = state.correctCount;
+            incorrectCount = state.incorrectCount;
+            questionResults = state.questionResults.map((r) => (r ? { ...r } : null));
+            roundMode = state.roundMode;
+            hasSubmittedCurrentRound = state.hasSubmittedCurrentRound;
+            answered = state.answered;
+            lastUserGuess = state.lastUserGuess;
+            hideEndQuizModal();
+            closeResultsModal();
+            updateRoundBadge();
+            document.getElementById('total-count').innerText = activeQuizData.length;
+            document.getElementById('progress-total-count').innerText = activeQuizData.length;
+            loadQuestion(state.currentIndex);
+            updateScoreboard();
+        }
+
         async function switchUnit(sheetName) {
             if (!sheetName || sheetName === currentSheetName) return;
+
+            // Save the current unit's progress before changing.
+            snapshotCurrentUnit();
+
             currentSheetName = sheetName;
             updateEyebrow(sheetName);
+
+            // Refresh the per-unit leaderboard regardless of cache state.
+            refreshLeaderboard();
+
+            // If we've already loaded this unit before, restore where the user left off.
+            if (unitStates[sheetName]) {
+                restoreUnitState(unitStates[sheetName]);
+                setContentStatus(loadedQuizData === fallbackQuizData ? 'fallback' : 'live');
+                return;
+            }
+
+            // First visit: fetch tracks and start a fresh quiz for this unit.
             try {
                 const quizData = await fetchQuizData(sheetName);
                 loadedQuizData = quizData.tracks.length > 0 ? quizData.tracks : [...fallbackQuizData];
@@ -2484,6 +2555,7 @@
                 showToast(`Could not load ${sheetName}. Using fallback content.`);
             }
             initApp();
+            snapshotCurrentUnit();
         }
 
         async function bootstrapApp() {
@@ -2532,6 +2604,8 @@
             populateUnitSwitcher(availableSheets, currentSheetName);
             updateEyebrow(currentSheetName);
             initApp();
+            // Cache the starting unit so switching away and back preserves the shuffled order.
+            snapshotCurrentUnit();
             refreshLeaderboard();
 
             if (skippedRowCount > 0) {
