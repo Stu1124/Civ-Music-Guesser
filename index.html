@@ -292,6 +292,27 @@
             text-transform: uppercase;
         }
 
+        .unit-dropdown-sm .unit-dropdown-trigger {
+            min-height: 28px;
+            padding: 0 8px 0 12px;
+            font-size: 0.70rem;
+            letter-spacing: 0.04em;
+        }
+
+        .unit-dropdown-sm .unit-dropdown-trigger svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .unit-dropdown-sm .unit-dropdown-menu {
+            min-width: 150px;
+        }
+
+        .unit-dropdown-sm .unit-dropdown-item {
+            padding: 7px 10px;
+            font-size: 0.74rem;
+        }
+
         .btn-primary,
         .btn-soft,
         .btn-secondary,
@@ -1413,6 +1434,13 @@
             </div>
             <button onclick="setMiniLeaderboardOpen(false)" class="link-button">Close</button>
         </div>
+        <div class="unit-dropdown unit-dropdown-sm" id="lb-mini-dropdown" style="margin: 4px 0 8px;">
+            <button type="button" id="lb-mini-dropdown-trigger" class="unit-dropdown-trigger" onclick="toggleLeaderboardDropdown('lb-mini-dropdown')" aria-haspopup="listbox" aria-expanded="false" style="width:100%;justify-content:space-between;">
+                <span id="lb-mini-dropdown-label">Unit 8</span>
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+            </button>
+            <ul id="lb-mini-dropdown-menu" class="unit-dropdown-menu" role="listbox" hidden></ul>
+        </div>
         <ul id="mini-leaderboard-list" class="leaderboard-list"></ul>
         <button class="view-all-btn" onclick="setFullLeaderboardOpen(true)">
             <i data-lucide="list" style="width:13px;height:13px;" aria-hidden="true"></i>
@@ -1427,7 +1455,14 @@
                     <p class="kicker">All Scores</p>
                     <h3 class="full-lb-title">Full Leaderboard</h3>
                 </div>
-                <div style="display:flex;gap:8px;align-items:center;">
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <div class="unit-dropdown unit-dropdown-sm" id="lb-full-dropdown">
+                        <button type="button" id="lb-full-dropdown-trigger" class="unit-dropdown-trigger" onclick="toggleLeaderboardDropdown('lb-full-dropdown')" aria-haspopup="listbox" aria-expanded="false">
+                            <span id="lb-full-dropdown-label">Unit 8</span>
+                            <i data-lucide="chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <ul id="lb-full-dropdown-menu" class="unit-dropdown-menu" role="listbox" hidden></ul>
+                    </div>
                     <button onclick="refreshLeaderboard(true)" class="btn-soft">Refresh</button>
                     <button onclick="setFullLeaderboardOpen(false)" class="link-button">Close</button>
                 </div>
@@ -1565,6 +1600,13 @@
         let isFullLeaderboardOpen = false;
         let cachedLeaderboardEntries = [];
         let currentSheetName = null;
+        // Which unit's leaderboard is currently being displayed. Tracked
+        // independently from the active quiz unit so the user can browse
+        // any leaderboard without changing what they're playing.
+        let currentLeaderboardSheet = null;
+        // Cached unit list (live from Apps Script, or fallback) used to
+        // populate the leaderboard dropdowns.
+        let availableUnitList = [];
         // Per-unit quiz state so switching tabs doesn't wipe progress.
         const unitStates = {};
 
@@ -2005,7 +2047,8 @@
 
             try {
                 setLeaderboardStatus('Loading leaderboard...');
-                const lbUrl = LEADERBOARD_URL.trim() + (currentSheetName ? '?sheet=' + encodeURIComponent(currentSheetName) : '');
+                const lbSheet = currentLeaderboardSheet || currentSheetName;
+                const lbUrl = LEADERBOARD_URL.trim() + (lbSheet ? '?sheet=' + encodeURIComponent(lbSheet) : '');
                 const response = await fetch(lbUrl, { cache: 'no-store' });
                 if (!response.ok) {
                     throw new Error(`Leaderboard fetch failed (${response.status}).`);
@@ -2639,6 +2682,79 @@
             toggleUnitDropdown(false);
         }
 
+        // --- Leaderboard unit switcher ---
+        // Two synchronized dropdowns (mini panel + full modal). Both are
+        // populated from the same unit list and both control the same
+        // currentLeaderboardSheet state.
+        const LEADERBOARD_DROPDOWN_IDS = ['lb-mini-dropdown', 'lb-full-dropdown'];
+
+        function populateLeaderboardSwitcher(sheets, selectedName) {
+            const list = (sheets && sheets.length > 0) ? sheets : FALLBACK_UNIT_LIST;
+            availableUnitList = list;
+            LEADERBOARD_DROPDOWN_IDS.forEach((dropId) => {
+                const menu = document.getElementById(dropId + '-menu');
+                const label = document.getElementById(dropId + '-label');
+                if (!menu) return;
+                menu.innerHTML = '';
+                list.forEach((s) => {
+                    const li = document.createElement('li');
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'unit-dropdown-item';
+                    btn.dataset.unit = s.name;
+                    btn.textContent = s.name;
+                    btn.setAttribute('role', 'option');
+                    if (s.name === selectedName) btn.classList.add('is-active');
+                    btn.addEventListener('click', () => {
+                        closeAllLeaderboardDropdowns();
+                        switchLeaderboardUnit(s.name);
+                    });
+                    li.appendChild(btn);
+                    menu.appendChild(li);
+                });
+                if (label && selectedName) label.textContent = selectedName;
+            });
+        }
+
+        function setActiveLeaderboardUnit(name) {
+            LEADERBOARD_DROPDOWN_IDS.forEach((dropId) => {
+                const menu = document.getElementById(dropId + '-menu');
+                const label = document.getElementById(dropId + '-label');
+                if (label && name) label.textContent = name;
+                if (!menu) return;
+                menu.querySelectorAll('.unit-dropdown-item').forEach((btn) => {
+                    btn.classList.toggle('is-active', btn.dataset.unit === name);
+                });
+            });
+        }
+
+        function toggleLeaderboardDropdown(dropId, open) {
+            const drop = document.getElementById(dropId);
+            const trigger = document.getElementById(dropId + '-trigger');
+            const menu = document.getElementById(dropId + '-menu');
+            if (!drop || !trigger || !menu) return;
+            const next = typeof open === 'boolean' ? open : drop.dataset.open !== 'true';
+            // Close any other open dropdowns first.
+            if (next) closeAllLeaderboardDropdowns(dropId);
+            drop.dataset.open = next ? 'true' : 'false';
+            trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
+            menu.hidden = !next;
+        }
+
+        function closeAllLeaderboardDropdowns(exceptId) {
+            LEADERBOARD_DROPDOWN_IDS.forEach((dropId) => {
+                if (dropId === exceptId) return;
+                toggleLeaderboardDropdown(dropId, false);
+            });
+        }
+
+        function switchLeaderboardUnit(sheetName) {
+            if (!sheetName || sheetName === currentLeaderboardSheet) return;
+            currentLeaderboardSheet = sheetName;
+            setActiveLeaderboardUnit(sheetName);
+            refreshLeaderboard();
+        }
+
         function updateEyebrow(sheetName) {
             const el = document.querySelector('.eyebrow');
             if (el && sheetName) el.textContent = sheetName;
@@ -2689,6 +2805,10 @@
             updateEyebrow(sheetName);
             setActiveUnitPill(sheetName);
 
+            // Default the leaderboard view to follow the active quiz unit.
+            currentLeaderboardSheet = sheetName;
+            setActiveLeaderboardUnit(sheetName);
+
             // Refresh the per-unit leaderboard regardless of cache state.
             refreshLeaderboard();
 
@@ -2734,7 +2854,9 @@
             // tracks fetch run in parallel instead of sequentially.
             const defaultUnit = 'Unit 8';
             currentSheetName = defaultUnit;
+            currentLeaderboardSheet = defaultUnit;
             populateUnitSwitcher(FALLBACK_UNIT_LIST, defaultUnit);
+            populateLeaderboardSwitcher(FALLBACK_UNIT_LIST, defaultUnit);
             updateEyebrow(defaultUnit);
 
             if (USE_REMOTE_DATA) {
@@ -2757,7 +2879,10 @@
                         // Keep the user's current selection if it still exists, otherwise pick the first.
                         const stillExists = availableSheets.some((s) => s.name === currentSheetName);
                         if (!stillExists) currentSheetName = availableSheets[0].name;
+                        const lbStillExists = availableSheets.some((s) => s.name === currentLeaderboardSheet);
+                        if (!lbStillExists) currentLeaderboardSheet = currentSheetName;
                         populateUnitSwitcher(availableSheets, currentSheetName);
+                        populateLeaderboardSwitcher(availableSheets, currentLeaderboardSheet);
                         updateEyebrow(currentSheetName);
                     }
                 } catch (err) {
@@ -2797,9 +2922,16 @@
             initIcons();
 
             document.addEventListener('click', (e) => {
-                const drop = document.getElementById('unit-dropdown');
-                if (!drop || drop.dataset.open !== 'true') return;
-                if (!drop.contains(e.target)) closeUnitDropdown();
+                const unitDrop = document.getElementById('unit-dropdown');
+                if (unitDrop && unitDrop.dataset.open === 'true' && !unitDrop.contains(e.target)) {
+                    closeUnitDropdown();
+                }
+                LEADERBOARD_DROPDOWN_IDS.forEach((dropId) => {
+                    const drop = document.getElementById(dropId);
+                    if (drop && drop.dataset.open === 'true' && !drop.contains(e.target)) {
+                        toggleLeaderboardDropdown(dropId, false);
+                    }
+                });
             });
 
             document.addEventListener('keydown', (e) => {
