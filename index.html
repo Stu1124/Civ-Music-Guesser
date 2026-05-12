@@ -967,6 +967,185 @@
             flex: 1;
         }
 
+        .admin-card {
+            width: min(100%, 880px);
+            max-height: min(92vh, 940px);
+        }
+
+        .admin-body {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .admin-section {
+            border-top: 1px solid var(--line);
+            padding-top: 14px;
+        }
+
+        .admin-section:first-child {
+            border-top: 0;
+            padding-top: 0;
+        }
+
+        .admin-help {
+            margin: 4px 0 10px;
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+
+        .admin-help code {
+            background: var(--field);
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 0.78em;
+        }
+
+        .admin-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .admin-row .compact-input {
+            flex: 1 1 160px;
+            min-width: 0;
+        }
+
+        .admin-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .admin-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--panel-soft);
+        }
+
+        .admin-stat-label {
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.10em;
+            text-transform: uppercase;
+            color: var(--subtle);
+        }
+
+        .admin-stat-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        @media (max-width: 720px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .admin-table {
+            width: 100%;
+            margin-top: 6px;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            color: var(--text);
+        }
+
+        .admin-table th {
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.10em;
+            text-transform: uppercase;
+            color: var(--subtle);
+        }
+
+        .admin-table td.numeric {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .admin-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .admin-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 6px;
+            border: 1px solid var(--line-strong);
+            background: var(--panel-raised);
+            color: var(--text);
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: border-color 140ms ease, background 140ms ease;
+        }
+
+        .admin-action-btn + .admin-action-btn {
+            margin-left: 6px;
+        }
+
+        .admin-action-btn:hover {
+            border-color: var(--brand);
+        }
+
+        .admin-action-btn.danger:hover {
+            border-color: var(--bad);
+            color: var(--bad);
+        }
+
+        .admin-status-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .admin-status-tag.approved {
+            background: rgba(70, 198, 151, 0.18);
+            color: #a9f3cf;
+        }
+
+        .admin-status-tag.denied {
+            background: rgba(229, 122, 136, 0.18);
+            color: #f7b7c0;
+        }
+
+        .admin-gate {
+            text-align: left;
+        }
+
+        #admin-settings-list .admin-row {
+            margin-bottom: 6px;
+        }
+
         .full-lb-table {
             width: 100%;
             border-collapse: separate;
@@ -1291,6 +1470,10 @@
                 </div>
                 <div class="status-cluster">
                     <span id="content-status" class="status-pill status-warn">Fallback content</span>
+                    <button id="admin-launch-btn" onclick="openAdminPanel()" class="floating-button" title="Admin panel" aria-label="Admin panel">
+                        <i data-lucide="shield" aria-hidden="true"></i>
+                        <span class="floating-label">Admin</span>
+                    </button>
                     <a class="floating-button" href="https://docs.google.com/forms/d/e/1FAIpQLSfIPFJHt9kfxEmOeBaGkJbDxSkg6hfNzxQ-G9FDIf_MB9HP8Q/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" title="Advertisement Form" aria-label="Advertisement Form">
                         <i data-lucide="megaphone" aria-hidden="true"></i>
                         <span class="floating-label">Advertisement Form</span>
@@ -1481,6 +1664,105 @@
                     </thead>
                     <tbody id="full-lb-body"></tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="full-lb-modal hidden">
+        <div class="full-lb-card admin-card">
+            <div class="full-lb-header">
+                <div>
+                    <p class="kicker">Admin</p>
+                    <h3 class="full-lb-title">Admin Panel</h3>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button onclick="adminRefresh()" class="btn-soft">Refresh</button>
+                    <button onclick="adminLogout()" class="btn-soft">Sign out</button>
+                    <button onclick="closeAdminPanel()" class="link-button">Close</button>
+                </div>
+            </div>
+            <div class="full-lb-body admin-body">
+
+                <div id="admin-token-gate" class="admin-section admin-gate hidden">
+                    <p class="kicker">Sign in</p>
+                    <p class="admin-help">Enter the admin token (the value of <code>admin_token</code> in the <code>settings</code> tab).</p>
+                    <div class="admin-row">
+                        <input id="admin-token-input" type="password" class="compact-input" placeholder="Admin token" autocomplete="off">
+                        <button onclick="adminLogin()" class="btn-primary">Unlock</button>
+                    </div>
+                    <p id="admin-token-status" class="status-line"></p>
+                </div>
+
+                <div id="admin-content" class="hidden">
+
+                    <section class="admin-section">
+                        <p class="kicker">Overview</p>
+                        <div class="admin-stat-grid">
+                            <div class="admin-stat"><span class="admin-stat-label">All-time events</span><span id="admin-stat-total" class="admin-stat-value">—</span></div>
+                            <div class="admin-stat"><span class="admin-stat-label">Last 24h</span><span id="admin-stat-24h" class="admin-stat-value">—</span></div>
+                            <div class="admin-stat"><span class="admin-stat-label">Last 7d</span><span id="admin-stat-7d" class="admin-stat-value">—</span></div>
+                            <div class="admin-stat"><span class="admin-stat-label">Last 30d</span><span id="admin-stat-30d" class="admin-stat-value">—</span></div>
+                        </div>
+                    </section>
+
+                    <section class="admin-section admin-grid">
+                        <div>
+                            <p class="kicker">By action</p>
+                            <table class="admin-table"><tbody id="admin-by-action"></tbody></table>
+                        </div>
+                        <div>
+                            <p class="kicker">By unit</p>
+                            <table class="admin-table"><tbody id="admin-by-unit"></tbody></table>
+                        </div>
+                    </section>
+
+                    <section class="admin-section">
+                        <p class="kicker">Leaderboard counts</p>
+                        <table class="admin-table">
+                            <thead><tr><th>Tab</th><th>Total</th><th>Approved</th><th>Denied</th></tr></thead>
+                            <tbody id="admin-lb-counts"></tbody>
+                        </table>
+                    </section>
+
+                    <section class="admin-section">
+                        <p class="kicker">Recent activity</p>
+                        <table class="admin-table">
+                            <thead><tr><th>When</th><th>Action</th><th>Unit</th></tr></thead>
+                            <tbody id="admin-recent"></tbody>
+                        </table>
+                    </section>
+
+                    <section class="admin-section">
+                        <p class="kicker">App settings</p>
+                        <p class="admin-help">Edit a setting key/value. The settings sheet is created automatically if it doesn't exist.</p>
+                        <div id="admin-settings-list"></div>
+                        <div class="admin-row" style="margin-top:10px;">
+                            <input id="admin-setting-key" class="compact-input" placeholder="key (e.g. app_title)" autocomplete="off">
+                            <input id="admin-setting-value" class="compact-input" placeholder="value" autocomplete="off">
+                            <button onclick="adminSaveSetting()" class="btn-primary">Save</button>
+                        </div>
+                        <p id="admin-settings-status" class="status-line"></p>
+                    </section>
+
+                    <section class="admin-section">
+                        <p class="kicker">Score moderation</p>
+                        <div class="admin-row">
+                            <select id="admin-scores-unit" class="compact-input" onchange="adminLoadScores(this.value)"></select>
+                            <button onclick="adminLoadScores()" class="btn-soft">Reload</button>
+                        </div>
+                        <table class="admin-table">
+                            <thead><tr><th>Name</th><th>%</th><th>Q</th><th>When</th><th>Status</th><th></th></tr></thead>
+                            <tbody id="admin-scores-body"></tbody>
+                        </table>
+                        <p id="admin-scores-status" class="status-line"></p>
+                    </section>
+
+                    <section class="admin-section">
+                        <p class="kicker">Maintenance</p>
+                        <button onclick="adminClearLog()" class="btn-soft">Clear usage log</button>
+                    </section>
+
+                </div>
             </div>
         </div>
     </div>
@@ -1827,17 +2109,16 @@
         }
 
         async function fetchSettings() {
-            if (!SETTINGS_SOURCE_URL.trim()) return {};
-            const rows = await fetchRowsFromSource(SETTINGS_SOURCE_URL.trim());
-            const settings = {};
-
-            rows.forEach((row) => {
-                const key = (row.key || '').trim();
-                if (!key) return;
-                settings[key] = (row.value || '').trim();
-            });
-
-            return settings;
+            if (!LEADERBOARD_URL.trim()) return {};
+            try {
+                const response = await fetch(LEADERBOARD_URL.trim() + '?action=settings', { cache: 'no-store' });
+                if (!response.ok) return {};
+                const json = await response.json();
+                if (json && json.error) return {};
+                return (json && json.settings) ? json.settings : {};
+            } catch (_) {
+                return {};
+            }
         }
 
         function applySettings(settings) {
@@ -1848,9 +2129,13 @@
                 if (notebook) notebook.href = settings.notebook_url;
             }
 
-            if (settings.quiz_title) {
+            // Both `app_title` and `quiz_title` map to the page heading.
+            // `app_title` is the new, more obvious key.
+            const titleValue = settings.app_title || settings.quiz_title;
+            if (titleValue) {
                 const title = document.getElementById('quiz-title');
-                if (title) title.innerText = settings.quiz_title;
+                if (title) title.innerText = titleValue;
+                document.title = titleValue;
             }
         }
 
@@ -2755,6 +3040,387 @@
             refreshLeaderboard();
         }
 
+        // ============================================================
+        // Admin panel
+        // ============================================================
+        const ADMIN_TOKEN_STORAGE_KEY = 'civmg_admin_token';
+
+        function getAdminToken() {
+            try { return localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY) || ''; }
+            catch (_) { return ''; }
+        }
+
+        function setAdminToken(value) {
+            try {
+                if (value) localStorage.setItem(ADMIN_TOKEN_STORAGE_KEY, value);
+                else localStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY);
+            } catch (_) {}
+        }
+
+        function isAdminModalOpen() {
+            const m = document.getElementById('admin-modal');
+            return m && !m.classList.contains('hidden');
+        }
+
+        function openAdminPanel() {
+            const m = document.getElementById('admin-modal');
+            if (!m) return;
+            m.classList.remove('hidden');
+            const token = getAdminToken();
+            if (token) {
+                showAdminContent();
+                adminRefresh();
+            } else {
+                showAdminGate();
+            }
+        }
+
+        function closeAdminPanel() {
+            const m = document.getElementById('admin-modal');
+            if (m) m.classList.add('hidden');
+        }
+
+        function showAdminGate() {
+            document.getElementById('admin-token-gate').classList.remove('hidden');
+            document.getElementById('admin-content').classList.add('hidden');
+            const inp = document.getElementById('admin-token-input');
+            if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 30); }
+            const status = document.getElementById('admin-token-status');
+            if (status) status.textContent = '';
+        }
+
+        function showAdminContent() {
+            document.getElementById('admin-token-gate').classList.add('hidden');
+            document.getElementById('admin-content').classList.remove('hidden');
+        }
+
+        async function adminLogin() {
+            const inp = document.getElementById('admin-token-input');
+            const status = document.getElementById('admin-token-status');
+            if (!inp) return;
+            const token = (inp.value || '').trim();
+            if (!token) {
+                if (status) { status.textContent = 'Enter a token.'; status.className = 'status-line status-bad'; }
+                return;
+            }
+            // Validate by attempting a metrics call.
+            if (status) { status.textContent = 'Checking...'; status.className = 'status-line'; }
+            try {
+                const res = await fetch(LEADERBOARD_URL.trim() + '?action=metrics&token=' + encodeURIComponent(token), { cache: 'no-store' });
+                const json = await res.json();
+                if (json && json.error) {
+                    if (status) { status.textContent = 'Invalid token.'; status.className = 'status-line status-bad'; }
+                    return;
+                }
+                setAdminToken(token);
+                showAdminContent();
+                renderAdminMetrics(json);
+                renderAdminScoreUnitOptions();
+                renderAdminSettingsList();
+            } catch (err) {
+                if (status) { status.textContent = 'Could not reach Apps Script.'; status.className = 'status-line status-bad'; }
+            }
+        }
+
+        function adminLogout() {
+            setAdminToken('');
+            showAdminGate();
+        }
+
+        async function adminRefresh() {
+            const token = getAdminToken();
+            if (!token) { showAdminGate(); return; }
+            try {
+                const res = await fetch(LEADERBOARD_URL.trim() + '?action=metrics&token=' + encodeURIComponent(token), { cache: 'no-store' });
+                const json = await res.json();
+                if (json && json.error) {
+                    showAdminGate();
+                    return;
+                }
+                renderAdminMetrics(json);
+                renderAdminScoreUnitOptions();
+                renderAdminSettingsList();
+                const lbUnitSelect = document.getElementById('admin-scores-unit');
+                if (lbUnitSelect && lbUnitSelect.value) adminLoadScores(lbUnitSelect.value);
+            } catch (_) {}
+        }
+
+        function renderAdminMetrics(m) {
+            if (!m) return;
+            document.getElementById('admin-stat-total').textContent = m.totalEvents || 0;
+            document.getElementById('admin-stat-24h').textContent = m.eventsLast24h || 0;
+            document.getElementById('admin-stat-7d').textContent = m.eventsLast7d || 0;
+            document.getElementById('admin-stat-30d').textContent = m.eventsLast30d || 0;
+
+            const byActionTbody = document.getElementById('admin-by-action');
+            byActionTbody.innerHTML = '';
+            const actionEntries = Object.entries(m.eventsByAction || {}).sort((a, b) => b[1] - a[1]);
+            if (actionEntries.length === 0) {
+                byActionTbody.innerHTML = '<tr><td colspan="2" style="color:var(--subtle);">No events yet.</td></tr>';
+            } else {
+                actionEntries.forEach(([k, v]) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${escapeHtml(k)}</td><td class="numeric">${v}</td>`;
+                    byActionTbody.appendChild(tr);
+                });
+            }
+
+            const byUnitTbody = document.getElementById('admin-by-unit');
+            byUnitTbody.innerHTML = '';
+            const unitEntries = Object.entries(m.eventsByUnit || {}).sort((a, b) => b[1] - a[1]);
+            if (unitEntries.length === 0) {
+                byUnitTbody.innerHTML = '<tr><td colspan="2" style="color:var(--subtle);">No unit events.</td></tr>';
+            } else {
+                unitEntries.forEach(([k, v]) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${escapeHtml(k)}</td><td class="numeric">${v}</td>`;
+                    byUnitTbody.appendChild(tr);
+                });
+            }
+
+            const lbCountsTbody = document.getElementById('admin-lb-counts');
+            lbCountsTbody.innerHTML = '';
+            const boards = m.leaderboards || [];
+            if (boards.length === 0) {
+                lbCountsTbody.innerHTML = '<tr><td colspan="4" style="color:var(--subtle);">No leaderboard tabs yet.</td></tr>';
+            } else {
+                boards.forEach((b) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${escapeHtml(b.unit)} <span style="color:var(--subtle);font-size:0.72rem;">(${escapeHtml(b.tabName)})</span></td><td class="numeric">${b.total}</td><td class="numeric">${b.approved}</td><td class="numeric">${b.denied}</td>`;
+                    lbCountsTbody.appendChild(tr);
+                });
+            }
+
+            const recentTbody = document.getElementById('admin-recent');
+            recentTbody.innerHTML = '';
+            const events = m.recentEvents || [];
+            if (events.length === 0) {
+                recentTbody.innerHTML = '<tr><td colspan="3" style="color:var(--subtle);">No activity yet.</td></tr>';
+            } else {
+                events.forEach((ev) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${escapeHtml(formatRelativeTime(ev.timestamp))}</td><td>${escapeHtml(ev.action || '')}</td><td>${escapeHtml(ev.sheet || '')}</td>`;
+                    recentTbody.appendChild(tr);
+                });
+            }
+        }
+
+        function renderAdminScoreUnitOptions() {
+            const sel = document.getElementById('admin-scores-unit');
+            if (!sel) return;
+            const prev = sel.value;
+            sel.innerHTML = '';
+            const list = (availableUnitList && availableUnitList.length > 0) ? availableUnitList : FALLBACK_UNIT_LIST;
+            list.forEach((s) => {
+                const opt = document.createElement('option');
+                opt.value = s.name;
+                opt.textContent = s.name;
+                sel.appendChild(opt);
+            });
+            const target = prev || (currentSheetName || (list[0] && list[0].name));
+            if (target) sel.value = target;
+            if (sel.value) adminLoadScores(sel.value);
+        }
+
+        async function renderAdminSettingsList() {
+            const token = getAdminToken();
+            if (!token) return;
+            const container = document.getElementById('admin-settings-list');
+            if (!container) return;
+            container.innerHTML = '<p class="status-line">Loading...</p>';
+            try {
+                const res = await fetch(LEADERBOARD_URL.trim() + '?action=admin_settings&token=' + encodeURIComponent(token), { cache: 'no-store' });
+                const json = await res.json();
+                container.innerHTML = '';
+                const settings = (json && json.settings) || {};
+                const keys = Object.keys(settings).sort();
+                if (keys.length === 0) {
+                    container.innerHTML = '<p class="status-line">No settings yet. Add one below.</p>';
+                    return;
+                }
+                keys.forEach((key) => {
+                    const row = document.createElement('div');
+                    row.className = 'admin-row';
+                    const isToken = key === 'admin_token';
+                    row.innerHTML = `
+                        <input type="text" class="compact-input" value="${escapeAttr(key)}" disabled style="flex:0 0 200px;">
+                        <input type="${isToken ? 'password' : 'text'}" class="compact-input" data-setting-value="${escapeAttr(key)}" value="${escapeAttr(settings[key])}">
+                        <button class="admin-action-btn" data-save-setting="${escapeAttr(key)}">Save</button>
+                    `;
+                    container.appendChild(row);
+                });
+                container.querySelectorAll('[data-save-setting]').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        const key = btn.getAttribute('data-save-setting');
+                        const inp = container.querySelector(`[data-setting-value="${cssEscape(key)}"]`);
+                        if (inp) adminSaveSettingDirect(key, inp.value);
+                    });
+                });
+            } catch (_) {
+                container.innerHTML = '<p class="status-line status-bad">Failed to load settings.</p>';
+            }
+        }
+
+        async function adminSaveSetting() {
+            const keyInp = document.getElementById('admin-setting-key');
+            const valInp = document.getElementById('admin-setting-value');
+            const key = (keyInp.value || '').trim();
+            const value = valInp.value || '';
+            if (!key) return;
+            await adminSaveSettingDirect(key, value);
+            keyInp.value = '';
+            valInp.value = '';
+        }
+
+        async function adminSaveSettingDirect(key, value) {
+            const token = getAdminToken();
+            if (!token) return;
+            const status = document.getElementById('admin-settings-status');
+            if (status) { status.textContent = 'Saving...'; status.className = 'status-line'; }
+            try {
+                const res = await fetch(LEADERBOARD_URL.trim(), {
+                    method: 'POST',
+                    body: JSON.stringify({ adminOp: true, op: 'updateSetting', token, key, value })
+                });
+                const json = await res.json();
+                if (json && json.error) {
+                    if (status) { status.textContent = 'Error: ' + json.error; status.className = 'status-line status-bad'; }
+                    return;
+                }
+                if (status) { status.textContent = `Saved "${key}".`; status.className = 'status-line status-ok'; }
+                renderAdminSettingsList();
+                // If app_title changed, re-apply to the page.
+                if (key === 'app_title' || key === 'quiz_title') {
+                    applySettings({ app_title: value });
+                }
+            } catch (_) {
+                if (status) { status.textContent = 'Network error.'; status.className = 'status-line status-bad'; }
+            }
+        }
+
+        async function adminLoadScores(unitName) {
+            const token = getAdminToken();
+            if (!token) return;
+            const sel = document.getElementById('admin-scores-unit');
+            const unit = unitName || (sel && sel.value) || currentSheetName || '';
+            if (sel && sel.value !== unit) sel.value = unit;
+            const tbody = document.getElementById('admin-scores-body');
+            const status = document.getElementById('admin-scores-status');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="6" style="color:var(--subtle);">Loading...</td></tr>';
+            if (status) status.textContent = '';
+            try {
+                const url = LEADERBOARD_URL.trim() + '?action=admin_scores&token=' + encodeURIComponent(token) + '&sheet=' + encodeURIComponent(unit);
+                const res = await fetch(url, { cache: 'no-store' });
+                const json = await res.json();
+                if (json && json.error) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="status-bad">${escapeHtml(json.error)}</td></tr>`;
+                    return;
+                }
+                const scores = (json && json.scores) || [];
+                if (scores.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="color:var(--subtle);">No scores in this leaderboard yet.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = '';
+                scores
+                    .slice()
+                    .sort((a, b) => (b.accuracy || 0) - (a.accuracy || 0))
+                    .forEach((s) => {
+                        const tr = document.createElement('tr');
+                        const statusTag = `<span class="admin-status-tag ${s.status === 'denied' ? 'denied' : 'approved'}">${s.status || 'approved'}</span>`;
+                        const flipTo = s.status === 'denied' ? 'approved' : 'denied';
+                        tr.innerHTML = `
+                            <td>${escapeHtml(s.nickname || '')}</td>
+                            <td class="numeric">${s.accuracy != null ? s.accuracy + '%' : ''}</td>
+                            <td class="numeric">${s.totalQuestions || ''}</td>
+                            <td>${escapeHtml(formatRelativeTime(s.createdAt))}</td>
+                            <td>${statusTag}</td>
+                            <td>
+                                <button class="admin-action-btn" data-flip-status data-tab="${escapeAttr(s.tabName)}" data-row="${s.row}" data-status="${flipTo}">${flipTo === 'denied' ? 'Deny' : 'Approve'}</button>
+                                <button class="admin-action-btn danger" data-delete-score data-tab="${escapeAttr(s.tabName)}" data-row="${s.row}">Delete</button>
+                            </td>`;
+                        tbody.appendChild(tr);
+                    });
+                tbody.querySelectorAll('[data-flip-status]').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        adminSetStatus(btn.getAttribute('data-tab'), Number(btn.getAttribute('data-row')), btn.getAttribute('data-status'));
+                    });
+                });
+                tbody.querySelectorAll('[data-delete-score]').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        adminDeleteScore(btn.getAttribute('data-tab'), Number(btn.getAttribute('data-row')));
+                    });
+                });
+            } catch (_) {
+                tbody.innerHTML = '<tr><td colspan="6" class="status-bad">Network error.</td></tr>';
+            }
+        }
+
+        async function adminSetStatus(tabName, row, status) {
+            const token = getAdminToken();
+            if (!token) return;
+            try {
+                await fetch(LEADERBOARD_URL.trim(), {
+                    method: 'POST',
+                    body: JSON.stringify({ adminOp: true, op: 'setStatus', token, tabName, row, status })
+                });
+                const sel = document.getElementById('admin-scores-unit');
+                adminLoadScores(sel ? sel.value : '');
+            } catch (_) {}
+        }
+
+        async function adminDeleteScore(tabName, row) {
+            if (!confirm('Delete this score? This cannot be undone.')) return;
+            const token = getAdminToken();
+            if (!token) return;
+            try {
+                await fetch(LEADERBOARD_URL.trim(), {
+                    method: 'POST',
+                    body: JSON.stringify({ adminOp: true, op: 'deleteScore', token, tabName, row })
+                });
+                const sel = document.getElementById('admin-scores-unit');
+                adminLoadScores(sel ? sel.value : '');
+            } catch (_) {}
+        }
+
+        async function adminClearLog() {
+            if (!confirm('Clear the entire usage_log sheet? Stats will reset.')) return;
+            const token = getAdminToken();
+            if (!token) return;
+            try {
+                await fetch(LEADERBOARD_URL.trim(), {
+                    method: 'POST',
+                    body: JSON.stringify({ adminOp: true, op: 'clearUsageLog', token })
+                });
+                adminRefresh();
+            } catch (_) {}
+        }
+
+        // --- Small utilities for admin rendering ---
+        function escapeHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[c]);
+        }
+        function escapeAttr(s) { return escapeHtml(s); }
+        function cssEscape(s) {
+            // Minimal CSS attribute selector escape (Apps Script keys are usually [a-z_]+).
+            return String(s).replace(/(["\\])/g, '\\$1');
+        }
+        function formatRelativeTime(iso) {
+            if (!iso) return '';
+            const t = new Date(iso).getTime();
+            if (isNaN(t)) return iso;
+            const diff = Date.now() - t;
+            const min = 60 * 1000, hr = 60 * min, day = 24 * hr;
+            if (diff < min) return 'just now';
+            if (diff < hr) return Math.floor(diff / min) + 'm ago';
+            if (diff < day) return Math.floor(diff / hr) + 'h ago';
+            if (diff < 30 * day) return Math.floor(diff / day) + 'd ago';
+            return new Date(iso).toLocaleDateString();
+        }
+
         function updateEyebrow(sheetName) {
             const el = document.querySelector('.eyebrow');
             if (el && sheetName) el.textContent = sheetName;
@@ -2936,8 +3602,14 @@
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
+                    if (isAdminModalOpen()) { closeAdminPanel(); return; }
                     if (isFullLeaderboardOpen) { setFullLeaderboardOpen(false); return; }
                     if (isMiniLeaderboardOpen) { setMiniLeaderboardOpen(false); return; }
+                }
+                // Enter inside the admin token input triggers login.
+                if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'admin-token-input') {
+                    adminLogin();
+                    return;
                 }
 
                 const activeEl = document.activeElement;
