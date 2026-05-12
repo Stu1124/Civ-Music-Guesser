@@ -32,6 +32,14 @@ function doGet(e) {
       return jsonResponse_({ tracks: getTracks_(sheetParam) });
     }
 
+    if (action === 'guess') {
+      // Lightweight per-answer ping from the frontend. result=correct|incorrect.
+      var result = String(params.result || '').trim().toLowerCase();
+      if (result === 'correct') logUsage_('guess_correct', sheetParam);
+      else if (result === 'incorrect') logUsage_('guess_incorrect', sheetParam);
+      return jsonResponse_({ ok: true });
+    }
+
     if (action === 'settings') {
       return jsonResponse_({ settings: getPublicSettings_() });
     }

@@ -1146,6 +1146,55 @@
             margin-bottom: 6px;
         }
 
+        /* Invisible hover zone in the BOTTOM-right corner — empty space on all
+           viewport sizes, no conflict with topbar buttons or the mini panel.
+           Hover the zone to reveal the admin button. */
+        .admin-hover-zone {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            z-index: 50;
+            background: transparent;
+        }
+
+        .admin-corner-btn {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--line-strong);
+            border-radius: 999px;
+            background: rgba(17, 24, 32, 0.86);
+            color: var(--muted);
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 200ms ease, transform 200ms ease, color 160ms ease, border-color 160ms ease;
+            cursor: pointer;
+        }
+
+        .admin-hover-zone:hover .admin-corner-btn,
+        .admin-corner-btn:focus-visible,
+        .admin-corner-btn.is-revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .admin-corner-btn:hover {
+            color: var(--brand);
+            border-color: var(--brand);
+        }
+
+        .admin-corner-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
         .full-lb-table {
             width: 100%;
             border-collapse: separate;
@@ -1470,10 +1519,6 @@
                 </div>
                 <div class="status-cluster">
                     <span id="content-status" class="status-pill status-warn">Fallback content</span>
-                    <button id="admin-launch-btn" onclick="openAdminPanel()" class="floating-button" title="Admin panel" aria-label="Admin panel">
-                        <i data-lucide="shield" aria-hidden="true"></i>
-                        <span class="floating-label">Admin</span>
-                    </button>
                     <a class="floating-button" href="https://docs.google.com/forms/d/e/1FAIpQLSfIPFJHt9kfxEmOeBaGkJbDxSkg6hfNzxQ-G9FDIf_MB9HP8Q/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" title="Advertisement Form" aria-label="Advertisement Form">
                         <i data-lucide="megaphone" aria-hidden="true"></i>
                         <span class="floating-label">Advertisement Form</span>
@@ -1503,11 +1548,11 @@
                                     </button>
                                     <ul id="unit-dropdown-menu" class="unit-dropdown-menu" role="listbox" hidden></ul>
                                 </div>
+                                <div id="mode-badge" class="mode-badge mode-badge-sub">Full Quiz</div>
                                 <button type="button" class="restart-icon-btn" onclick="restartQuiz()" title="Restart quiz" aria-label="Restart quiz">
                                     <i data-lucide="rotate-ccw" aria-hidden="true"></i>
                                 </button>
                             </div>
-                            <div id="mode-badge" class="mode-badge mode-badge-sub">Full Quiz</div>
                         </div>
                     </div>
 
@@ -1702,6 +1747,10 @@
                             <div class="admin-stat"><span class="admin-stat-label">Last 24h</span><span id="admin-stat-24h" class="admin-stat-value">—</span></div>
                             <div class="admin-stat"><span class="admin-stat-label">Last 7d</span><span id="admin-stat-7d" class="admin-stat-value">—</span></div>
                             <div class="admin-stat"><span class="admin-stat-label">Last 30d</span><span id="admin-stat-30d" class="admin-stat-value">—</span></div>
+                            <div class="admin-stat"><span class="admin-stat-label">Correct guesses</span><span id="admin-stat-correct" class="admin-stat-value">—</span></div>
+                            <div class="admin-stat"><span class="admin-stat-label">Incorrect guesses</span><span id="admin-stat-incorrect" class="admin-stat-value">—</span></div>
+                            <div class="admin-stat"><span class="admin-stat-label">Overall accuracy</span><span id="admin-stat-accuracy" class="admin-stat-value">—</span></div>
+                            <div class="admin-stat"><span class="admin-stat-label">Scores submitted</span><span id="admin-stat-submits" class="admin-stat-value">—</span></div>
                         </div>
                     </section>
 
@@ -2716,6 +2765,7 @@
             } else {
                 incorrectCount += 1;
             }
+            logGuess(isCorrect);
             questionResults[currentIndex] = {
                 isCorrect,
                 guessRaw: userGuessRaw
@@ -2735,6 +2785,7 @@
 
             answered = true;
             incorrectCount += 1;
+            logGuess(false);
             questionResults[currentIndex] = {
                 isCorrect: false,
                 guessRaw: 'Revealed answer',
@@ -2967,6 +3018,18 @@
             toggleUnitDropdown(false);
         }
 
+        // Fire-and-forget guess logger so we can show correct/incorrect totals
+        // in the admin panel. Never blocks the UI; errors are swallowed.
+        function logGuess(isCorrect) {
+            if (!LEADERBOARD_URL.trim()) return;
+            try {
+                const url = LEADERBOARD_URL.trim()
+                    + '?action=guess&result=' + (isCorrect ? 'correct' : 'incorrect')
+                    + (currentSheetName ? '&sheet=' + encodeURIComponent(currentSheetName) : '');
+                fetch(url, { cache: 'no-store', keepalive: true }).catch(() => {});
+            } catch (_) {}
+        }
+
         // --- Leaderboard unit switcher ---
         // Two synchronized dropdowns (mini panel + full modal). Both are
         // populated from the same unit list and both control the same
@@ -3151,6 +3214,16 @@
             document.getElementById('admin-stat-24h').textContent = m.eventsLast24h || 0;
             document.getElementById('admin-stat-7d').textContent = m.eventsLast7d || 0;
             document.getElementById('admin-stat-30d').textContent = m.eventsLast30d || 0;
+
+            const byAction = m.eventsByAction || {};
+            const correctGuesses = byAction['guess_correct'] || 0;
+            const incorrectGuesses = byAction['guess_incorrect'] || 0;
+            const totalGuesses = correctGuesses + incorrectGuesses;
+            const accuracy = totalGuesses > 0 ? Math.round((correctGuesses / totalGuesses) * 100) : 0;
+            document.getElementById('admin-stat-correct').textContent = correctGuesses;
+            document.getElementById('admin-stat-incorrect').textContent = incorrectGuesses;
+            document.getElementById('admin-stat-accuracy').textContent = totalGuesses > 0 ? (accuracy + '%') : '—';
+            document.getElementById('admin-stat-submits').textContent = byAction['score_submit'] || 0;
 
             const byActionTbody = document.getElementById('admin-by-action');
             byActionTbody.innerHTML = '';
@@ -3628,5 +3701,11 @@
         };
 
     </script>
+
+    <div id="admin-hover-zone" class="admin-hover-zone" aria-hidden="true">
+        <button id="admin-launch-btn" onclick="openAdminPanel()" class="admin-corner-btn" title="Admin panel" aria-label="Admin panel" tabindex="-1">
+            <i data-lucide="shield" aria-hidden="true"></i>
+        </button>
+    </div>
 </body>
 </html>
