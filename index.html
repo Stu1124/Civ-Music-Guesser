@@ -163,75 +163,133 @@
             min-width: 0;
         }
 
-        .unit-switcher {
+        .unit-row {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            padding: 4px;
-            border: 1px solid var(--line-strong);
-            border-radius: 999px;
-            background: rgba(17, 24, 32, 0.86);
-            max-width: 100%;
-            flex-wrap: wrap;
-            justify-content: flex-end;
+            gap: 8px;
         }
 
-        .unit-pill {
+        .unit-dropdown {
+            position: relative;
+        }
+
+        .unit-dropdown-trigger {
             display: inline-flex;
+            min-height: 32px;
             align-items: center;
-            justify-content: center;
-            border: 0;
+            gap: 6px;
+            border: 1px solid var(--line-strong);
             border-radius: 999px;
-            padding: 6px 14px;
+            padding: 0 10px 0 14px;
+            background: rgba(17, 24, 32, 0.86);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.76rem;
+            font-weight: 800;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: border-color 160ms ease, background 160ms ease;
+        }
+
+        .unit-dropdown-trigger:hover {
+            border-color: var(--brand);
+        }
+
+        .unit-dropdown-trigger:disabled {
+            cursor: wait;
+            opacity: 0.6;
+        }
+
+        .unit-dropdown-trigger svg {
+            width: 14px;
+            height: 14px;
+            transition: transform 180ms ease;
+            color: var(--muted);
+        }
+
+        .unit-dropdown[data-open="true"] .unit-dropdown-trigger {
+            border-color: var(--brand);
+        }
+
+        .unit-dropdown[data-open="true"] .unit-dropdown-trigger svg {
+            transform: rotate(180deg);
+        }
+
+        .unit-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            z-index: 30;
+            min-width: 170px;
+            margin: 0;
+            padding: 6px;
+            list-style: none;
+            border: 1px solid var(--line-strong);
+            border-radius: 12px;
+            background: var(--panel-raised);
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+        }
+
+        .unit-dropdown-menu[hidden] {
+            display: none;
+        }
+
+        .unit-dropdown-item {
+            display: block;
+            width: 100%;
+            border: 0;
+            border-radius: 8px;
+            padding: 9px 12px;
             background: transparent;
             color: var(--muted);
             font-family: inherit;
-            font-size: 0.74rem;
-            font-weight: 800;
-            letter-spacing: 0.02em;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-align: left;
             cursor: pointer;
-            white-space: nowrap;
-            transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+            transition: background 140ms ease, color 140ms ease;
         }
 
-        .unit-pill:hover:not(.is-active):not(:disabled) {
+        .unit-dropdown-item:hover {
+            background: rgba(40, 182, 164, 0.12);
             color: var(--text);
-            background: rgba(40, 182, 164, 0.10);
         }
 
-        .unit-pill.is-active {
+        .unit-dropdown-item.is-active {
             background: var(--brand);
             color: #06110f;
         }
 
-        .unit-pill:disabled {
-            cursor: wait;
-            opacity: 0.65;
+        .restart-icon-btn {
+            display: inline-flex;
+            min-height: 32px;
+            width: 32px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--line-strong);
+            border-radius: 999px;
+            background: rgba(17, 24, 32, 0.86);
+            color: var(--text);
+            cursor: pointer;
+            transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+        }
+
+        .restart-icon-btn:hover {
+            border-color: var(--brand);
+            color: var(--brand);
+        }
+
+        .restart-icon-btn svg {
+            width: 14px;
+            height: 14px;
         }
 
         .mode-badge-sub {
-            min-height: 26px;
+            min-height: 24px;
             padding: 0 10px;
-            font-size: 0.68rem;
-            letter-spacing: 0.08em;
+            font-size: 0.66rem;
+            letter-spacing: 0.10em;
             text-transform: uppercase;
-        }
-
-        @media (max-width: 720px) {
-            .header-controls {
-                align-items: stretch;
-                width: 100%;
-            }
-
-            .unit-switcher {
-                width: 100%;
-                justify-content: stretch;
-            }
-
-            .unit-pill {
-                flex: 1 1 0;
-                padding: 6px 8px;
-            }
         }
 
         .btn-primary,
@@ -1211,10 +1269,6 @@
                     </div>
                 </div>
                 <div class="status-cluster">
-                    <button onclick="restartQuiz()" class="floating-button" title="Restart Quiz" aria-label="Restart Quiz">
-                        <i data-lucide="rotate-ccw" aria-hidden="true"></i>
-                        <span class="floating-label">Restart</span>
-                    </button>
                     <span id="content-status" class="status-pill status-warn">Fallback content</span>
                     <a class="floating-button" href="https://docs.google.com/forms/d/e/1FAIpQLSfIPFJHt9kfxEmOeBaGkJbDxSkg6hfNzxQ-G9FDIf_MB9HP8Q/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" title="Advertisement Form" aria-label="Advertisement Form">
                         <i data-lucide="megaphone" aria-hidden="true"></i>
@@ -1237,7 +1291,18 @@
                             <h2 id="listen-heading" class="panel-title">Track <span id="current-count">1</span> of <span id="total-count">0</span></h2>
                         </div>
                         <div class="header-controls">
-                            <div id="unit-switcher" class="unit-switcher" role="tablist" aria-label="Switch unit"></div>
+                            <div class="unit-row">
+                                <div class="unit-dropdown" id="unit-dropdown">
+                                    <button type="button" id="unit-dropdown-trigger" class="unit-dropdown-trigger" onclick="toggleUnitDropdown()" aria-haspopup="listbox" aria-expanded="false">
+                                        <span id="unit-dropdown-label">Unit 8</span>
+                                        <i data-lucide="chevron-down" aria-hidden="true"></i>
+                                    </button>
+                                    <ul id="unit-dropdown-menu" class="unit-dropdown-menu" role="listbox" hidden></ul>
+                                </div>
+                                <button type="button" class="restart-icon-btn" onclick="restartQuiz()" title="Restart quiz" aria-label="Restart quiz">
+                                    <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+                                </button>
+                            </div>
                             <div id="mode-badge" class="mode-badge mode-badge-sub">Full Quiz</div>
                         </div>
                     </div>
@@ -2520,40 +2585,58 @@
         ];
 
         function populateUnitSwitcher(sheets, selectedName) {
-            const container = document.getElementById('unit-switcher');
-            if (!container) return;
+            const menu = document.getElementById('unit-dropdown-menu');
+            const label = document.getElementById('unit-dropdown-label');
+            if (!menu) return;
             const list = (sheets && sheets.length > 0) ? sheets : FALLBACK_UNIT_LIST;
-            container.innerHTML = '';
+            menu.innerHTML = '';
             list.forEach((s) => {
+                const li = document.createElement('li');
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'unit-pill';
-                btn.textContent = s.name;
+                btn.className = 'unit-dropdown-item';
                 btn.dataset.unit = s.name;
-                btn.setAttribute('role', 'tab');
-                btn.setAttribute('aria-selected', s.name === selectedName ? 'true' : 'false');
+                btn.textContent = s.name;
+                btn.setAttribute('role', 'option');
                 if (s.name === selectedName) btn.classList.add('is-active');
-                btn.addEventListener('click', () => switchUnit(s.name));
-                container.appendChild(btn);
+                btn.addEventListener('click', () => {
+                    closeUnitDropdown();
+                    switchUnit(s.name);
+                });
+                li.appendChild(btn);
+                menu.appendChild(li);
             });
+            if (label && selectedName) label.textContent = selectedName;
         }
 
         function setActiveUnitPill(name) {
-            const container = document.getElementById('unit-switcher');
-            if (!container) return;
-            container.querySelectorAll('.unit-pill').forEach((btn) => {
-                const isActive = btn.dataset.unit === name;
-                btn.classList.toggle('is-active', isActive);
-                btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            const menu = document.getElementById('unit-dropdown-menu');
+            const label = document.getElementById('unit-dropdown-label');
+            if (label && name) label.textContent = name;
+            if (!menu) return;
+            menu.querySelectorAll('.unit-dropdown-item').forEach((btn) => {
+                btn.classList.toggle('is-active', btn.dataset.unit === name);
             });
         }
 
         function setUnitSwitcherBusy(busy) {
-            const container = document.getElementById('unit-switcher');
-            if (!container) return;
-            container.querySelectorAll('.unit-pill').forEach((btn) => {
-                btn.disabled = !!busy;
-            });
+            const trigger = document.getElementById('unit-dropdown-trigger');
+            if (trigger) trigger.disabled = !!busy;
+        }
+
+        function toggleUnitDropdown(open) {
+            const drop = document.getElementById('unit-dropdown');
+            const trigger = document.getElementById('unit-dropdown-trigger');
+            const menu = document.getElementById('unit-dropdown-menu');
+            if (!drop || !trigger || !menu) return;
+            const next = typeof open === 'boolean' ? open : drop.dataset.open !== 'true';
+            drop.dataset.open = next ? 'true' : 'false';
+            trigger.setAttribute('aria-expanded', next ? 'true' : 'false');
+            menu.hidden = !next;
+        }
+
+        function closeUnitDropdown() {
+            toggleUnitDropdown(false);
         }
 
         function updateEyebrow(sheetName) {
@@ -2644,26 +2727,39 @@
                 showToast('Open via http://localhost (not file://) to avoid CORS errors.');
             }
 
-            let availableSheets = [];
-            let initialSheet = null;
+            // Render the switcher immediately with the fallback unit list so the
+            // UI doesn't sit blank while Apps Script cold-starts. We pick a
+            // default unit up front (Unit 8) so the first track fetch knows
+            // which sheet to request — this lets the sheets fetch and the
+            // tracks fetch run in parallel instead of sequentially.
+            const defaultUnit = 'Unit 8';
+            currentSheetName = defaultUnit;
+            populateUnitSwitcher(FALLBACK_UNIT_LIST, defaultUnit);
+            updateEyebrow(defaultUnit);
 
             if (USE_REMOTE_DATA) {
-                try {
-                    availableSheets = await fetchAvailableSheets();
-                    if (availableSheets.length > 0) initialSheet = availableSheets[0].name;
-                } catch (_) {}
-            }
+                // Fire all three requests in parallel — this was the source
+                // of the 20s startup delay (sheets fetch was awaited first).
+                const sheetsPromise = fetchAvailableSheets().catch(() => []);
+                const tracksPromise = fetchQuizData(defaultUnit);
+                const settingsPromise = fetchSettings().catch(() => ({}));
 
-            if (USE_REMOTE_DATA) {
                 try {
-                    const [quizData, settings] = await Promise.all([
-                        fetchQuizData(initialSheet),
-                        fetchSettings().catch(() => ({}))
+                    const [availableSheets, quizData, settings] = await Promise.all([
+                        sheetsPromise,
+                        tracksPromise,
+                        settingsPromise
                     ]);
                     loadedQuizData = quizData.tracks;
                     skippedRowCount = quizData.warnings.length;
-                    currentSheetName = initialSheet;
                     applySettings(settings);
+                    if (Array.isArray(availableSheets) && availableSheets.length > 0) {
+                        // Keep the user's current selection if it still exists, otherwise pick the first.
+                        const stillExists = availableSheets.some((s) => s.name === currentSheetName);
+                        if (!stillExists) currentSheetName = availableSheets[0].name;
+                        populateUnitSwitcher(availableSheets, currentSheetName);
+                        updateEyebrow(currentSheetName);
+                    }
                 } catch (err) {
                     usedFallback = true;
                     loadedQuizData = [...fallbackQuizData];
@@ -2679,9 +2775,10 @@
             }
 
             setContentStatus(usedFallback ? 'fallback' : 'live');
-            populateUnitSwitcher(availableSheets, currentSheetName);
-            updateEyebrow(currentSheetName);
             initApp();
+            // Re-render lucide icons (the dropdown chevron + restart icon were
+            // injected into the DOM after the initial pass).
+            initIcons();
             // Cache the starting unit so switching away and back preserves the shuffled order.
             snapshotCurrentUnit();
             refreshLeaderboard();
@@ -2698,6 +2795,12 @@
         // --- INIT ---
         window.onload = async () => {
             initIcons();
+
+            document.addEventListener('click', (e) => {
+                const drop = document.getElementById('unit-dropdown');
+                if (!drop || drop.dataset.open !== 'true') return;
+                if (!drop.contains(e.target)) closeUnitDropdown();
+            });
 
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
